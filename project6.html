@@ -1,0 +1,189 @@
+<html><head><title>ICS 612 project 6</title></head>
+<body>
+<h1>Operating Systems Project 6</h1>
+
+<br>
+<B><FONT SIZE="-1">
+<SCRIPT LANGUAGE="JavaScript">
+<!--
+ document.write('<BR>' + 'This page was last modified on: ' + document.lastModified + ' HST</BR>');
+ //-->
+</SCRIPT>
+</FONT></B>
+
+The goal of this project is to familiarize yourselves with file system
+design and implementation.
+
+<p>As before, this is an individual or group project.
+
+<p>As an alternative, some of you may want a more challenging project.
+If so, please see at the end.
+
+<h2>Description</h2>
+
+<p> I want you to design a file system that can store up to 10,000
+files on a medium up to 2GB in size.  The maximum size of each file is
+200MB.  The file system should provide a directory tree with file names
+composed of arbitrary characters up to 200 bytes long.  Each block is
+1KBytes, which means files and the file system must be able to haandle
+up to 2M-1 blocks (2,097,151 blocks, with at least 21 bits per block
+number).
+
+<p> The file system does not have to be efficient.  In particular, you
+do not need to implement a buffer cache.  Your implementation must limit
+itself to using a fixed amount of main memory, on the order of 1MB or
+(much) less.
+
+<p> The actual storage on "disk" must be moderately efficient, so that
+most of the space on the "disk" should be available for storage of
+actual data.
+
+<p> The file system should use block read and write operations provided
+by the instructor:
+
+<ul>
+<li> <tt>typedef char block [1024]; /* each block is 1KB */</tt>
+<li> <tt>int read_block (int block_num, char * block)</tt>
+--- returns 0 if the operation is successful, and -1 otherwise
+<li> <tt>int write_block (int block_num, char * block)</tt>
+--- returns 0 if the operation is successful, and -1 otherwise.  Actually
+writes the block to disk
+<li> <tt>int dev_open ()</tt>
+--- returns the device size (in blocks) if the operation is successful,
+and -1 otherwise
+</ul>
+
+<p>These are implemented in <a href="block.c"><tt>block.c</tt></a>.  The
+first block is block number 0.
+
+<p> <tt>dev_open</tt> accesses blocks in a file named <tt>simulated_device</tt>
+in the current directory.  To create the file, use the following command:
+<pre>
+dd if=/dev/zero of=simulated_device bs=1024 count=x
+</pre>
+where x is the size (in blocks) of your intended device.  For example,
+<pre>
+dd if=/dev/zero of=simulated_device bs=1024 count=131072
+</pre>
+gives you a 128MB device (128K blocks), and
+<pre>
+dd if=/dev/zero of=simulated_device bs=1024 count=250000
+</pre>
+gives you a device large enough for the maximum file size that
+<tt>testp6</tt> (see below) tries to build.
+
+<p> Your code must implement the following API, inspired by and
+simplified from the POSIX file API:
+<ul>
+<li> <tt>int my_open (char * path)</tt>, to open an exisiting file for
+reading or writing
+<li> <tt>int my_creat (char * path)</tt>, to open a new file for writing only (fails if the file already exists)
+<li> <tt>int my_read (int fd, void * buf, int count)</tt>, to sequentially
+read from a file
+<li> <tt>int my_write (int fd, void * buf, int count)</tt>, to sequentially
+write to a file
+<li> <tt>int my_close (int fd)</tt>
+<li> <tt>int my_remove (char * path)</tt>
+<li> <tt>int my_rename (char * old, char * new)</tt>
+<li> <tt>int my_mkdir (char * path)</tt>, only works if all but the last
+component of the path already exists
+<li> <tt>int my_rmdir (char * path)</tt>
+<li> <tt>void my_mkfs ()</tt>, checks to see if the device already has
+a file system on it, and if not, creates one.
+</ul>
+
+<p> A file providing this API, but not implementing it, is available
+at <a href="p6.c"><tt>p6.c</tt></a>.  If you only modify this file,
+that is all you have to turn in, otherwise turn in all your files for
+this project.  For your convenience, I have also provided <a
+href="p6.h"><tt>p6.h</tt></a> and a very simple test program, <a
+href="testp6.c"><tt>testp6.c</tt></a>.  This program runs all the
+tests unless an optional argument is provided, in which case it runs
+all the tests on files whose size (in bytes) is less than or equal to
+the argument.  A log of a complete run is <a
+href="project6samplelog">here</a>.
+
+<p> Your code does not need to provide protection, multiple links,
+access times, or current directories.  You also may assume that each
+file will be opened at most once before it is closed again, although
+multiple files (up to 10) may be open at the same time.
+
+<p> Your code <b>does</b> need to handle "<tt>/</tt>"-separated paths of
+arbitrary depth, and so one useful function you may find yourself
+writing may be to parse paths.  You may also want to write some
+routines to maintain and access bitmaps on disk.  Of course, all code
+you turn in must be yours, but you may draw inspiration from other
+code (e.g. Minix 3) as long as you give credit where appropriate.
+
+<p> All your code should run on a Unix compatible system.  You may
+use uhunix, or any Linux or BSD system (or even Minix for all I know).
+Please let me know what you have used.
+
+<p> You <b>MUST</b> consult with the instructor as early as possible
+(preferably before November 10th) to discuss your design and your
+strategies for implementation.  You MUST you have at least your data
+structures defined, data structures both on disk and in memory, before
+you come in to discuss your design.
+
+<p> To read what is stored on your "device", you may run
+<pre>
+od -t x1 simulated_device | m
+</pre>
+If you run on a little-endian machine (such as intel architectures),
+your numbers will come out "backwards", i.e. with the LSB first, unless
+you convert to big-endian before saving on disk (converting is not
+particularly recommended).
+
+<h2>Alternative</h2>
+
+<p> As an alternative, some of you may want a more challenging project.
+If so, please do the following instead of the above project.
+
+<p> I am unable to mount my minix3 disk image on linux.  As far as I can
+tell, the file system has changed.  However, I have found no documentation
+for this.
+
+<p> All I have found is commands for mounting specific partitions onto
+Linux with an offset corresponding to the size of the first partition.  For
+example, running
+
+<pre>
+fdisk -l -u -C 592 minix.img 
+</pre>
+
+Tells me that the first partition begins at sector 63.  Multiplying 63
+by 512, which is the same as <a
+href="http://wiki.edseek.com/guide:mount_loopback#mounting_with_a_specified_offset"> here</a>.  But mounting does not work:
+
+<pre>
+$ sudo mount -t minix -oloop,offset=32256 minix.img mnt/
+mount: wrong fs type, bad option, bad superblock on /dev/loop0,
+       missing codepage or helper program, or other error
+       In some cases useful info is found in syslog - try
+       dmesg | tail  or so
+</pre>
+
+dmesg tells me
+
+<pre>
+VFS: Can't find a Minix filesystem V1 | V2 | V3 on device loop0.
+</pre>
+
+Minix has no trouble finding the file system, so I suspect the problem
+is at the Linux end.
+
+<p> Your task would be to investigate what is going on.  If my assumption
+is correct that the Minix file system has changed, then write code for
+Linux to make it able to access this new Minix file system.  You would
+have to update the code in /usr/src/linux-3.0.4/fs/minix as appropriate.
+
+<p>In Minix itself, the code is in /usr/src/servers/vfs/ .  I assume that
+/usr/src/commands/mkfs.mfs/mkfs.c is also up to date.
+
+<p> So one of the reasons this project is challenging is, I am not really
+sure what is wrong, and I am not quite sure what you will need to do.
+
+<p> If you do want to do this project, please consult with me frequently,
+at least every week.
+
+</body></html>

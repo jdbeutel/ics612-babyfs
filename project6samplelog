@@ -1,0 +1,80 @@
+testing files up to 209715200 bytes
+making a file system on the device......done
+succeeded in creating directory /foo
+my_open correctly failed to open non-existent file /foo/bar
+successfully created file /foo/bar0
+successfully wrote 12 bytes to file /foo/bar0
+successfully closed file /foo/bar0
+successfully reopened file /foo/bar0
+successfully wrote initial 6 bytes to file /foo/bar0
+successfully read final 6 bytes from file /foo/bar0
+successfully closed file /foo/bar0 after reading
+successfully re-reopened file /foo/bar0
+successfully read initial 6 bytes from file /foo/bar0
+test completed successfully on a file of size 12
+successfully closed /foo/bar0
+successfully renamed /foo/bar0 to /qqq
+successfully removed /qqq
+successfully created directory /foo/bar
+successfully removed directory /foo/bar
+successfully created file /foo/bar1
+successfully wrote 1000 bytes to file /foo/bar1
+successfully closed file /foo/bar1
+successfully reopened file /foo/bar1
+successfully wrote initial 500 bytes to file /foo/bar1
+successfully read final 500 bytes from file /foo/bar1
+successfully closed file /foo/bar1 after reading
+successfully re-reopened file /foo/bar1
+successfully read initial 500 bytes from file /foo/bar1
+test completed successfully on a file of size 1000
+successfully created file /foo/bar2
+successfully wrote 10000 bytes to file /foo/bar2
+successfully closed file /foo/bar2
+successfully reopened file /foo/bar2
+successfully wrote initial 5000 bytes to file /foo/bar2
+successfully read final 5000 bytes from file /foo/bar2
+successfully closed file /foo/bar2 after reading
+successfully re-reopened file /foo/bar2
+successfully read initial 5000 bytes from file /foo/bar2
+test completed successfully on a file of size 10000
+successfully created file /foo/bar3
+successfully wrote 100000 bytes to file /foo/bar3
+successfully closed file /foo/bar3
+successfully reopened file /foo/bar3
+successfully wrote initial 50000 bytes to file /foo/bar3
+successfully read final 50000 bytes from file /foo/bar3
+successfully closed file /foo/bar3 after reading
+successfully re-reopened file /foo/bar3
+successfully read initial 50000 bytes from file /foo/bar3
+test completed successfully on a file of size 100000
+successfully created file /foo/bar4
+successfully wrote 1000000 bytes to file /foo/bar4
+successfully closed file /foo/bar4
+successfully reopened file /foo/bar4
+successfully wrote initial 500000 bytes to file /foo/bar4
+successfully read final 500000 bytes from file /foo/bar4
+successfully closed file /foo/bar4 after reading
+successfully re-reopened file /foo/bar4
+successfully read initial 500000 bytes from file /foo/bar4
+test completed successfully on a file of size 1000000
+successfully created file /foo/bar5
+successfully wrote 209715200 bytes to file /foo/bar5
+successfully closed file /foo/bar5
+successfully reopened file /foo/bar5
+successfully wrote initial 104857600 bytes to file /foo/bar5
+successfully read final 104857600 bytes from file /foo/bar5
+successfully closed file /foo/bar5 after reading
+successfully re-reopened file /foo/bar5
+successfully read initial 104857600 bytes from file /foo/bar5
+test completed successfully on a file of size 209715200
+successfully closed /foo/bar5
+successfully removed /foo/bar5
+successfully closed /foo/bar2
+successfully removed /foo/bar2
+successfully closed /foo/bar4
+successfully removed /foo/bar4
+successfully closed /foo/bar1
+successfully removed /foo/bar1
+successfully closed /foo/bar3
+successfully removed /foo/bar3
+tests completed successfully
