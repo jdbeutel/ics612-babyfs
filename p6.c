@@ -7,16 +7,18 @@
  */
 
 #include <stdio.h>
+#include "p6.h"
+#include "babyfs.h"
 
 /* open an exisiting file for reading or writing */
-int my_open (char * path)
+int my_open (const char * path)
 {
   printf ("my_open (%s) not implemented\n", path);
   return -1;
 }
 
 /* open a new file for writing only */
-int my_creat (char * path)
+int my_creat (const char * path)
 {
   printf ("my_creat (%s) not implemented\n", path);
   return -1;
@@ -30,7 +32,7 @@ int my_read (int fd, void * buf, int count)
 }
 
 /* sequentially write to a file */
-int my_write (int fd, void * buf, int count)
+int my_write (int fd, const void * buf, int count)
 {
   printf ("my_write (%d, %x, %d) not implemented\n", fd, buf, count);
   return -1;
@@ -42,26 +44,26 @@ int my_close (int fd)
   return -1;
 }
 
-int my_remove (char * path)
+int my_remove (const char * path)
 {
   printf ("my_remove (%s) not implemented\n", path);
   return -1;
 }
 
-int my_rename (char * old, char * new)
+int my_rename (const char * old, const char * new)
 {
   printf ("my_remove (%s, %s) not implemented\n", old, new);
   return -1;
 }
 
 /* only works if all but the last component of the path already exists */
-int my_mkdir (char * path)
+int my_mkdir (const char * path)
 {
   printf ("my_mkdir (%s) not implemented\n", path);
   return -1;
 }
 
-int my_rmdir (char * path)
+int my_rmdir (const char * path)
 {
   printf ("my_rmdir (%s) not implemented\n", path);
   return -1;
@@ -71,7 +73,8 @@ int my_rmdir (char * path)
  * and if not, create one. */
 void my_mkfs ()
 {
-	block super_check, blocks[5];
+	block super_check;
+	block blocks[5];
 	struct superblock *super;
 	struct index_node *index;
 	struct leaf_node *leaf;
@@ -81,7 +84,7 @@ void my_mkfs ()
 	if (devsize < 0) return;
 
 	if (read_block(0, super_check)) return;
-	super = super_check;
+	super = (struct superblock *) super_check;
 	if (super->magic_number == MAGIC_NUMBER) {
 		fprintf(stderr, "device already has this file system\n");
 		return;
@@ -90,7 +93,7 @@ void my_mkfs ()
 		fprintf(stderr, "device too small (%d blocks)\n", devsize);
 		return;
 	}
-	super = blocks[0];
+	super = (struct superblock *) blocks[0];
 	super->magic_number = MAGIC_NUMBER;
 	super->version = BABYFS_VERSION;
 	super->extent_tree_blocknr = 1;
@@ -98,7 +101,7 @@ void my_mkfs ()
 	super->total_blocks = devsize;
 	super->lower_bounds = MIN_LOWER_BOUNDS;	/* min for testing tree ops */
 
-	index = blocks[1];
+	index = (struct index_node *) blocks[1];
 	index->header.blocknr = 1;
 	index->header.type = TYPE_EXT_IDX;
 	index->header.nritems = 5;
@@ -130,7 +133,7 @@ void my_mkfs ()
 	index->key_ptrs[4].key.offset = 1;
 	index->key_ptrs[4].blocknr = 2;
 
-	leaf = blocks[2];
+	leaf = (struct leaf_node *) blocks[2];
 	leaf->header.blocknr = 2;
 	leaf->header.type = TYPE_EXT_LEAF;
 	leaf->header.nritems = 5;
@@ -166,7 +169,7 @@ void my_mkfs ()
 	leaf->items[4].offset = BLOCKSIZE;	/* not in block */
 	leaf->items[4].size = 0;
 
-	index = blocks[3];
+	index = (struct index_node *) blocks[3];
 	index->header.blocknr = 3;
 	index->header.type = TYPE_FS_IDX;
 	index->header.nritems = 1;
@@ -177,7 +180,7 @@ void my_mkfs ()
 	index->key_ptrs[0].key.offset = INODE_KEY_OFFSET;
 	index->key_ptrs[0].blocknr = 4;
 
-	leaf = blocks[4];
+	leaf = (struct leave_node *) blocks[4];
 	leaf->header.blocknr = 4;
 	leaf->header.type = TYPE_FS_LEAF;
 	leaf->header.nritems = 1;
@@ -190,8 +193,8 @@ void my_mkfs ()
 	leaf->items[0].size = 0;
 
 	for (i = 1; i < sizeof(blocks); i++) {
-		if (write_block(i, block[i])) return;
+		if (write_block(i, blocks[i])) return;
 	}
 	/* write superblock last */
-	write_block(0, block[0]);
+	write_block(0, blocks[0]);
 }

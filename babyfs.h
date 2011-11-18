@@ -25,37 +25,37 @@ struct header {			/* starts all nodes in a tree */
 	uint8_t type;		/* for testing, redundant with key.type */
 	uint8_t nritems;	/* populated key or item slots */
 	uint8_t level;		/* number of nodes to get to root */
-}
+};
 
 struct key {		/* in index and leaf nodes */
 	uint32_t objectid;	/* inode or blocknr */
 	uint8_t type;
 	uint32_t offset;
-}
+};
 
 struct key_ptr {		/* in index nodes */
 	struct key key;
 	blocknr_t blocknr;
-}
+};
 
 #define NODE_PAYLOAD_BYTES	(BLOCKSIZE-sizeof(struct header))
 #define MAX_KEY_PTRS	(NODE_PAYLOAD_BYTES/sizeof(struct key_ptr))
 struct index_node {
-	struct header;
+	struct header header;
 	struct key_ptr key_ptrs[MAX_KEY_PTRS];
-}
+};
 
 struct item {		/* in leaf node */
 	struct key key;
 	item_offset_t offset;	/* of metadata, in bytes from start of block */
 	item_size_t size;	/* of metadata, in bytes */
-}
+};
 
 #define MAX_ITEMS	(NODE_PAYLOAD_BYTES/sizeof(struct item))
 struct leaf_node {
-	struct header;
+	struct header header;
 	struct item items[MAX_ITEMS];
-}
+};
 
 #define INODE_DIR	1
 #define INODE_FILE	2
@@ -63,19 +63,19 @@ struct inode_metadata {
 	uint8_t inode_type;
 	time_t ctime;
 	time_t mtime;
-}
+};
 #define ROOT_DIR_INODE		0
 #define INODE_KEY_OFFSET	0
 
 struct dir_ent_metadata {
 	uint32_t inode;
 	char name[1]; /* variable-sized, \0-terminated, up to 200 chars */
-}
+};
 
 struct file_extent_metadata {
 	blocknr_t blocknr;
 	uint32_t size;	/* in bytes */
-}
+};
 
 #define MIN_LOWER_BOUNDS	2
 #define MAX_LOWER_BOUNDS	(MAX_KEY_PTRS/3)
@@ -89,4 +89,4 @@ struct superblock {	/* first block of device */
 	blocknr_t fs_tree_blocknr;	/* root */
 	int total_blocks;	/* device size */
 	uint8_t lower_bounds;	/* b for balancing inner nodes b..3b */
-}
+};

@@ -4,7 +4,7 @@
 #include "p6.h"
 #include "babyfs.h"
 
-struct block {
+struct cache {
 	blocknr_t read_blocknr;
 	blocknr_t write_blocknr;
 	int users;		/* how many currently using */
@@ -17,18 +17,18 @@ struct block {
 			data:1,		/* contains file data */
 			dirty:1;	/* needs flushing */
 	block contents;
-}
+};
 
-struct block blocks[100];
+block blocks[100];
 
-struct block *get_block(blocknr_t blocknr) {
+struct cache *get_block(blocknr_t blocknr) {
 }
 
 /* ensure a block for writing, allocating in extent tree if necessary */
-int shadow_block(struct block *b) {	
+int shadow_block(struct cache *c) {	
 }
 
-int put_block(struct block *b) {
+int put_block(struct cache *c) {
 }
 
 int flush_all() {
