@@ -7,6 +7,7 @@
  */
 
 #include <stdio.h>
+#include <time.h>
 #include "p6.h"
 #include "babyfs.h"
 
@@ -78,6 +79,7 @@ void my_mkfs ()
 	struct superblock *super;
 	struct index_node *index;
 	struct leaf_node *leaf;
+	struct inode_metadata *imd;
 	int devsize, i;
 
 	devsize = dev_open();
@@ -193,8 +195,12 @@ void my_mkfs ()
 	leaf->items[0].key.objectid = ROOT_DIR_INODE;
 	leaf->items[0].key.type = TYPE_INODE;
 	leaf->items[0].key.offset = INODE_KEY_OFFSET;
-	leaf->items[0].offset = BLOCKSIZE;	/* not in block */
-	leaf->items[0].size = 0;
+	leaf->items[0].size = sizeof(*imd);
+	leaf->items[0].offset = BLOCKSIZE - leaf->items[0].size;
+	imd = (struct inode_metadata *) (((char *)leaf) + leaf->items[0].offset);
+	imd->inode_type = INODE_DIR;
+	imd->ctime = time(NULL);
+	imd->mtime = time(NULL);
 
 	for (i = 1; i <= 4; i++) {
 		if (write_block(i, blocks[i])) return;

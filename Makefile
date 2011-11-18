@@ -1,7 +1,7 @@
 DEPS = babyfs.h p6.h
 OBJ = block.o cache.o p6.o
 
-%.o: %.c $(DEPS) start
+%.o: %.c $(DEPS)
 	cc -c -o $@ $<
 
 runtest%: test%

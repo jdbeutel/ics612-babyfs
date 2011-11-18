@@ -7,12 +7,12 @@ typedef uint32_t blocknr_t;	/* need 21 bits for 2G in 1K blocks */
 typedef uint16_t item_offset_t;	/* need 10 bits for bytes within a block */
 typedef uint16_t item_size_t;	/* need 10 bits for bytes within a block */
 
-/* nodes and keys in FS tree */
+/* FS tree node and key types */
 #define TYPE_INODE		0xf0
 #define TYPE_DIR_ENT		0xf1
 #define TYPE_FILE_EXTENT	0xf2
 
-/* nodes and keys in extent tree */
+/* extent tree node and key types */
 #define TYPE_SUPERBLOCK		0xe0
 #define TYPE_EXT_IDX		0xe1
 #define TYPE_EXT_LEAF		0xe2
@@ -31,8 +31,8 @@ struct header {			/* starts all nodes in a tree */
 	uint16_t level;		/* number of nodes to get to root */
 	blocknr_t blocknr;	/* for testing and simple consistency check */
 	uint8_t nritems;	/* populated key or item slots */
-	uint8_t filler1;	/* round off to 16 bytes for neat hex dumps */
-	uint16_t filler2;	/* round off to 16 bytes for neat hex dumps */
+	uint8_t filler1;	/* round up to 16 bytes for neat hex dumps */
+	uint16_t filler2;	/* round up to 16 bytes for neat hex dumps */
 };
 
 struct key {		/* in index and leaf nodes */
@@ -68,9 +68,11 @@ struct leaf_node {
 #define INODE_DIR	0xd1
 #define INODE_FILE	0xd2
 struct inode_metadata {
-	uint8_t inode_type;
-	time_t ctime;
-	time_t mtime;
+	uint32_t inode_type;
+	uint32_t filler1;	/* round up to 32 bytes for neat hex dumps */
+	time_t ctime;		/* 64 bits on my x86_64 */
+	uint64_t filler2;	/* lines up times in hex dump for comparison */
+	time_t mtime;		/* 64 bits on my x86_64 */
 };
 #define ROOT_DIR_INODE		0
 #define INODE_KEY_OFFSET	0
