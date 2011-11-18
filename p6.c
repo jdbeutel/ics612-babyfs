@@ -74,7 +74,7 @@ int my_rmdir (const char * path)
 void my_mkfs ()
 {
 	block super_check;
-	block blocks[5];
+	static block blocks[5];
 	struct superblock *super;
 	struct index_node *index;
 	struct leaf_node *leaf;
@@ -85,7 +85,7 @@ void my_mkfs ()
 
 	if (read_block(0, super_check)) return;
 	super = (struct superblock *) super_check;
-	if (super->magic_number == MAGIC_NUMBER) {
+	if (super->super_magic == SUPER_MAGIC) {
 		fprintf(stderr, "device already has this file system\n");
 		return;
 	}
@@ -94,7 +94,7 @@ void my_mkfs ()
 		return;
 	}
 	super = (struct superblock *) blocks[0];
-	super->magic_number = MAGIC_NUMBER;
+	super->super_magic = SUPER_MAGIC;
 	super->version = BABYFS_VERSION;
 	super->extent_tree_blocknr = 1;
 	super->fs_tree_blocknr = 3;
@@ -102,6 +102,7 @@ void my_mkfs ()
 	super->lower_bounds = MIN_LOWER_BOUNDS;	/* min for testing tree ops */
 
 	index = (struct index_node *) blocks[1];
+	index->header.header_magic = HEADER_MAGIC;
 	index->header.blocknr = 1;
 	index->header.type = TYPE_EXT_IDX;
 	index->header.nritems = 5;
@@ -134,6 +135,7 @@ void my_mkfs ()
 	index->key_ptrs[4].blocknr = 2;
 
 	leaf = (struct leaf_node *) blocks[2];
+	leaf->header.header_magic = HEADER_MAGIC;
 	leaf->header.blocknr = 2;
 	leaf->header.type = TYPE_EXT_LEAF;
 	leaf->header.nritems = 5;
@@ -170,6 +172,7 @@ void my_mkfs ()
 	leaf->items[4].size = 0;
 
 	index = (struct index_node *) blocks[3];
+	index->header.header_magic = HEADER_MAGIC;
 	index->header.blocknr = 3;
 	index->header.type = TYPE_FS_IDX;
 	index->header.nritems = 1;
@@ -180,7 +183,8 @@ void my_mkfs ()
 	index->key_ptrs[0].key.offset = INODE_KEY_OFFSET;
 	index->key_ptrs[0].blocknr = 4;
 
-	leaf = (struct leave_node *) blocks[4];
+	leaf = (struct leaf_node *) blocks[4];
+	leaf->header.header_magic = HEADER_MAGIC;
 	leaf->header.blocknr = 4;
 	leaf->header.type = TYPE_FS_LEAF;
 	leaf->header.nritems = 1;
@@ -192,7 +196,7 @@ void my_mkfs ()
 	leaf->items[0].offset = BLOCKSIZE;	/* not in block */
 	leaf->items[0].size = 0;
 
-	for (i = 1; i < sizeof(blocks); i++) {
+	for (i = 1; i <= 4; i++) {
 		if (write_block(i, blocks[i])) return;
 	}
 	/* write superblock last */

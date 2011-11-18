@@ -1,0 +1,2 @@
+#!/bin/sh
+make runtest$1 2>&1 | tee make.out

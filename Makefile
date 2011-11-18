@@ -1,14 +1,16 @@
 DEPS = babyfs.h p6.h
 OBJ = block.o cache.o p6.o
 
-%.o: %.c $(DEPS)
+%.o: %.c $(DEPS) start
 	cc -c -o $@ $<
 
 runtest%: test%
 	rm simulated_device
 	dd if=/dev/zero of=simulated_device bs=1024 count=99
 	./$< 2>&1 | tee $<.out
-	od -c simulated_device > $<.dump
+	od -Ax -c simulated_device > $<.od-c
+	od -Ax -X simulated_device > $<.od-X
+	cat $<.od-X
 
 .SECONDEXPANSION:
 
