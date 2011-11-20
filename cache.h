@@ -11,10 +11,8 @@ struct cache {
 	unsigned int	was_read:1,	/* was read from device */
 			will_write:1;	/* allocated, needs flushing */
 	block contents;
-	struct cache	*lru_next,	/* next-least-recently-used */
-			*lru_prev,	/* more-recently-used */
-			*read_hash,	/* hash chain of read_blocknr */
-			*write_hash;	/* hash chain of write_blocknr */
+	struct cache	*less_recently_used,
+			*more_recently_used;
 };
 
 extern struct cache *get_block(blocknr_t blocknr);

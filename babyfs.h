@@ -1,7 +1,7 @@
 /* ICS612 proj6 jbeutel 2011-11-15 */
 
-#include <stdint.h>
-#include <time.h>
+#include <stdint.h>	/* uint32_t, etc */
+#include <time.h>	/* time_t */
 
 /* These types are in RAM and on the device;
  * this project does not minimize their space.
@@ -95,6 +95,7 @@ struct file_extent_metadata {
 #define MAX_LOWER_BOUNDS	(MAX_KEY_PTRS/3)
 #define SUPER_MAGIC		0xaaa1babf
 #define BABYFS_VERSION		0
+#define SUPERBLOCK_NR		0
 
 struct superblock {	/* first block of device */
 	uint32_t super_magic;	/* magic number protects from my_mkfs() */
@@ -105,5 +106,8 @@ struct superblock {	/* first block of device */
 	uint8_t lower_bounds;	/* b for balancing inner nodes b..3b */
 };
 
+#define NULL ((void *)0)
 #define TRUE 1
 #define FALSE 0
+#define PRIVATE static
+#define PUBLIC
