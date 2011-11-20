@@ -89,10 +89,10 @@ on the type of the key.
 #### extent tree:
 
 	objectid: 0, type: SUPERBLOCK,	offset: 1
-	objectid: 1, type: EXT_IDX,	offset: 1
+	objectid: 1, type: EXT_IDX,		offset: 1
 	objectid: 2, type: EXT_LEAF,	offset: 1
-	objectid: 3, type: FS_IDX,	offset: 1
-	objectid: 4, type: FS_LEAF,	offset: 1
+	objectid: 3, type: FS_IDX,		offset: 1
+	objectid: 4, type: FS_LEAF,		offset: 1
 	objectid: 5, type: FILE_DATA,	offset: 1
 
 
@@ -215,3 +215,5 @@ Babyfs will not support the following:
     "O. Rodeh.  2008.  'B-trees, shadowing,  and clones'  New York: ACM Transactions on Storage, volume 3, issue 4, February 2008.  Retrieved November 12, 2011"
 [5]: http://www2.hawaii.edu/~esb/2011fall.ics612/project6.html
 [6]: https://btrfs.wiki.kernel.org/articles/d/a/t/Data_Structures_3b4e.html
+
+<!-- vim: set ts=4: -->
