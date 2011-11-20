@@ -37,17 +37,25 @@ or deleting, respectively, along the path.  The key count boundary
 is b..3b where b >= 2, e.g., 2..6.  
 
 Each node in a tree is one block (1024 bytes), and starts with
-`header` (7 bytes).  Index nodes contain up to 78 `key_ptr`
-structures (13 bytes), so the boundary is 26..78, although the
+`header` (16 bytes).  Index nodes can contain up to 63 `key_ptr`
+structures (16 bytes), so the boundary is 20..60, although the
 tree operations can be tested with the minimal boundary, 2..6.
 The keys are kept sorted in the index, and the pointer is the
 block number of the node containing that key (or the next larger
 key that exists in the tree).  The lower bounds doesn't apply
 to a root node, which is never fixed.
 
-Leaf nodes contain 1..78 `item` structures (13 bytes)
+The maximum depth of the index nodes is 5, based on the lower bounds
+(20^5 = 3,200,000), providing a key for each block (maximum 2^21 = 2,097,152).
+(I'm not sure if the upper bounds is sufficent for this, but if so,
+then the maximum depth will be 4, 60^4 = 12,960,000.)  This provides enough
+keys for the extent tree in the degenerate case of all tree nodes and
+1-block files, and more than enough for the file system tree to hold
+up to 10,000 files and directories.
+
+Leaf nodes contain 1..63 `item` structures (16 bytes)
 stacked after the `header`, paired with variable sized metadata
-for the item, stacked from the end of the block inward (growing
+for each item, stacked from the end of the block inward (growing
 toward the item structures).  An item contains its key
 and the size and offset of its metadata within the block (in bytes,
 if any).

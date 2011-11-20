@@ -3,7 +3,8 @@
 #include <stdint.h>	/* uint32_t, etc */
 #include <time.h>	/* time_t */
 
-/* These types are in RAM and on the device;
+/* ***************************************************
+ * The following types are in RAM and on the device;
  * this project does not minimize their space.
  */
 
@@ -106,8 +107,37 @@ struct superblock {	/* first block of device */
 	uint8_t lower_bounds;	/* b for balancing inner nodes b..3b */
 };
 
+
+/* ***************************************************
+ * The following types are in RAM only.
+ */
+
 #define NULL ((void *)0)
 #define TRUE 1
 #define FALSE 0
 #define PRIVATE static
 #define PUBLIC
+#define MAX_LEVEL 6
+
+struct cache {
+	blocknr_t read_blocknr;		/* if was_read, where from */
+	blocknr_t write_blocknr;	/* if allocated for writing */
+	int users;			/* how many currently using */
+	unsigned int	was_read:1,	/* was read from device */
+			will_write:1;	/* allocated, needs flushing */
+	block contents;
+	struct cache	*less_recently_used,
+			*more_recently_used;
+};
+
+/* cache.c */
+extern struct cache *get_block(blocknr_t blocknr);
+extern int shadow_block_to(struct cache *c, blocknr_t write_blocknr);
+extern struct cache *init_block(blocknr_t write_blocknr);
+extern int put_block(struct cache *c);
+extern int flush_all();
+
+struct path {
+	struct cache *nodes[MAX_LEVEL];
+	int slots[MAX_LEVEL];
+};

@@ -4,7 +4,8 @@
 #include <assert.h>	/* assert() */
 #include <string.h>	/* memset() */
 #include <errno.h>	/* ENOBUFS */
-#include "cache.h"
+#include "p6.h"		/* dev_open(), etc */
+#include "babyfs.h"	/* struct cache, etc */
 
 #define CACHE_COUNT 100
 static struct cache caches[CACHE_COUNT];
