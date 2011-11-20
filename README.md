@@ -61,39 +61,39 @@ sorted in that order, so keys with the same objectid are together in
 the index.  The metadata associated with a key, if any, depends
 on the type of the key.
 
-Key in FS tree:
+#### Key in FS tree:
 
-* objectid: inode number
-* type:
-** `INODE` - offset: 0
-** `DIR_ENT` - offset: hash of the name of this directory entry
-** `FILE_EXTENT` - offset: starting offset into the file (in bytes)
+##### objectid: inode number
+	type:
+	`INODE` - offset: 0
+	`DIR_ENT` - offset: hash of the name of this directory entry
+	`FILE_EXTENT` - offset: starting offset into the file (in bytes)
 
-Key in extent tree:
+#### Key in extent tree:
 
-* objectid: block number
-* type: `SUPERBLOCK, EXT_IDX, EXT_LEAF, FS_IDX, FS_LEAF, FILE_DATA`
-* offset: number of blocks in the extent (1 for a tree node, or N for a file)
+##### objectid: block number
+	type: `SUPERBLOCK, EXT_IDX, EXT_LEAF, FS_IDX, FS_LEAF, FILE_DATA`
+	offset: number of blocks in extent (1 for a tree node, or N for a file)
 
-Logical example:
+### Logical example:
 
-FS tree:
+#### FS tree:
 
-* objectid: 1
-** `type: INODE, offset: 0 -> inode_type: DIR, ctime: 2011-11-10`
-** `type: DIR_ENT, offset: 987654 -> name: "foo", inode: 2`
-* objectid: 2
-** `type: INODE -> inode_type: FILE, ctime: 2011-11-11`
-** `type: FILE_EXTENT, offset: 0 -> blocknr: 5, size: 13`
+##### objectid: 1
+	type: INODE, offset: 0 -> inode_type: DIR, ctime: 2011-11-10
+	type: DIR_ENT, offset: 987654 -> name: "foo", inode: 2
+##### objectid: 2
+	type: INODE -> inode_type: FILE, ctime: 2011-11-11
+	type: FILE_EXTENT, offset: 0 -> blocknr: 5, size: 13
 
-extent tree:
+#### extent tree:
 
-* `objectid: 0, type: SUPERBLOCK, offset: 1`
-* `objectid: 1, type: EXT_IDX, offset: 1`
-* `objectid: 2, type: EXT_LEAF, offset: 1`
-* `objectid: 3, type: FS_IDX, offset: 1`
-* `objectid: 4, type: FS_LEAF, offset: 1`
-* `objectid: 5, type: FILE_DATA, offset: 1`
+	objectid: 0, type: SUPERBLOCK,	offset: 1
+	objectid: 1, type: EXT_IDX,	offset: 1
+	objectid: 2, type: EXT_LEAF,	offset: 1
+	objectid: 3, type: FS_IDX,	offset: 1
+	objectid: 4, type: FS_LEAF,	offset: 1
+	objectid: 5, type: FILE_DATA,	offset: 1
 
 
 DATA STRUCTURES
@@ -212,8 +212,6 @@ Babyfs will not support the following:
 [2]: https://btrfs.wiki.kernel.org/articles/t/r/e/Trees.html
 [3]: https://btrfs.wiki.kernel.org/articles/c/o/d/Code_documentation.html
 [4]: http://www.cs.tau.ac.il/~ohadrode/papers/btree_TOS.pdf
-    "O. Rodeh.  2008.  'B-trees, shadowing,  and clones'  New York:
-    ACM Transactions on Storage, volume 3, issue 4, February 2008.
-    Retrieved November 12, 2011"
+    "O. Rodeh.  2008.  'B-trees, shadowing,  and clones'  New York: ACM Transactions on Storage, volume 3, issue 4, February 2008.  Retrieved November 12, 2011"
 [5]: http://www2.hawaii.edu/~esb/2011fall.ics612/project6.html
 [6]: https://btrfs.wiki.kernel.org/articles/d/a/t/Data_Structures_3b4e.html
