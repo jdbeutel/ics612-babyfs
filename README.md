@@ -67,7 +67,7 @@ on the type of the key.
 	type:
 		INODE - offset: 0
 		DIR_ENT - offset: hash of the name of this directory entry
-		FILE_EXTENT - offset: starting offset into the file (in bytes)
+		FILE_EXTENT - offset: starting offset into the file (in blocks)
 
 #### Key in extent tree:
 
@@ -84,7 +84,7 @@ on the type of the key.
 		type: DIR_ENT, offset: 987654 -> name: "foo", inode: 2
 	objectid: 2
 		type: INODE -> inode_type: FILE, ctime: 2011-11-11
-		type: FILE_EXTENT, offset: 0 -> blocknr: 5, size: 13
+		type: FILE_EXTENT, offset: 0 -> blocknr: 5, size: 42500
 
 #### extent tree:
 
@@ -93,7 +93,7 @@ on the type of the key.
 	objectid: 2, type: EXT_LEAF,	offset: 1
 	objectid: 3, type: FS_IDX,		offset: 1
 	objectid: 4, type: FS_LEAF,		offset: 1
-	objectid: 5, type: FILE_DATA,	offset: 1
+	objectid: 5, type: FILE_DATA,	offset: 42
 
 
 DATA STRUCTURES

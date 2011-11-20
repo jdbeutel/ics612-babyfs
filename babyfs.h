@@ -3,6 +3,10 @@
 #include <stdint.h>
 #include <time.h>
 
+/* These types are in RAM and on the device;
+ * this project does not minimize their space.
+ */
+
 typedef uint32_t blocknr_t;	/* need 21 bits for 2G in 1K blocks */
 typedef uint16_t item_offset_t;	/* need 10 bits for bytes within a block */
 typedef uint16_t item_size_t;	/* need 10 bits for bytes within a block */
@@ -53,7 +57,7 @@ struct index_node {
 	struct key_ptr key_ptrs[MAX_KEY_PTRS];
 };
 
-struct item {		/* in leaf node */
+struct item {		/* in leaf nodes */
 	struct key key;
 	item_offset_t offset;	/* of metadata, in bytes from start of block */
 	item_size_t size;	/* of metadata, in bytes */
@@ -87,7 +91,7 @@ struct file_extent_metadata {
 	uint32_t size;	/* in bytes */
 };
 
-#define MIN_LOWER_BOUNDS	2
+#define MIN_LOWER_BOUNDS	2	/* for testing tree ops */
 #define MAX_LOWER_BOUNDS	(MAX_KEY_PTRS/3)
 #define SUPER_MAGIC		0xaaa1babf
 #define BABYFS_VERSION		0
@@ -100,3 +104,6 @@ struct superblock {	/* first block of device */
 	int total_blocks;	/* device size */
 	uint8_t lower_bounds;	/* b for balancing inner nodes b..3b */
 };
+
+#define TRUE 1
+#define FALSE 0
