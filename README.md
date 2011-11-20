@@ -63,28 +63,28 @@ on the type of the key.
 
 #### Key in FS tree:
 
-##### objectid: inode number
+	objectid: inode number
 	type:
-	`INODE` - offset: 0
-	`DIR_ENT` - offset: hash of the name of this directory entry
-	`FILE_EXTENT` - offset: starting offset into the file (in bytes)
+		INODE - offset: 0
+		DIR_ENT - offset: hash of the name of this directory entry
+		FILE_EXTENT - offset: starting offset into the file (in bytes)
 
 #### Key in extent tree:
 
-##### objectid: block number
-	type: `SUPERBLOCK, EXT_IDX, EXT_LEAF, FS_IDX, FS_LEAF, FILE_DATA`
+	objectid: block number
+	type: SUPERBLOCK, EXT_IDX, EXT_LEAF, FS_IDX, FS_LEAF, FILE_DATA
 	offset: number of blocks in extent (1 for a tree node, or N for a file)
 
 ### Logical example:
 
 #### FS tree:
 
-##### objectid: 1
-	type: INODE, offset: 0 -> inode_type: DIR, ctime: 2011-11-10
-	type: DIR_ENT, offset: 987654 -> name: "foo", inode: 2
-##### objectid: 2
-	type: INODE -> inode_type: FILE, ctime: 2011-11-11
-	type: FILE_EXTENT, offset: 0 -> blocknr: 5, size: 13
+	objectid: 1
+		type: INODE, offset: 0 -> inode_type: DIR, ctime: 2011-11-10
+		type: DIR_ENT, offset: 987654 -> name: "foo", inode: 2
+	objectid: 2
+		type: INODE -> inode_type: FILE, ctime: 2011-11-11
+		type: FILE_EXTENT, offset: 0 -> blocknr: 5, size: 13
 
 #### extent tree:
 
