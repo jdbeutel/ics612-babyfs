@@ -7,7 +7,8 @@
  */
 
 #include <stdio.h>
-#include <time.h>
+#include <time.h>	/* time() */
+#include <string.h>	/* memset() */
 #include "p6.h"
 #include "babyfs.h"
 
@@ -70,13 +71,13 @@ int my_rmdir (const char * path)
   return -1;
 }
 
-/* check to see if the device already has a file system on it,
- * and if not, create one. */
+/* checks to see if the device already has a file system on it,
+ * and if not, creates one. */
 void my_mkfs ()
 {
-	block super_check;
-	static block blocks[5];
-	struct superblock *super;
+	block super_block;
+	struct cache *caches[5];
+	struct superblock *sb;
 	struct index_node *index;
 	struct leaf_node *leaf;
 	struct inode_metadata *imd;
@@ -85,9 +86,9 @@ void my_mkfs ()
 	devsize = dev_open();
 	if (devsize < 0) return;
 
-	if (read_block(0, super_check)) return;
-	super = (struct superblock *) super_check;
-	if (super->super_magic == SUPER_MAGIC) {
+	if (read_block(0, super_block)) return;
+	sb = (struct superblock *) super_block;
+	if (sb->super_magic == SUPER_MAGIC) {
 		fprintf(stderr, "device already has this file system\n");
 		return;
 	}
@@ -95,15 +96,16 @@ void my_mkfs ()
 		fprintf(stderr, "device too small (%d blocks)\n", devsize);
 		return;
 	}
-	super = (struct superblock *) blocks[0];
-	super->super_magic = SUPER_MAGIC;
-	super->version = BABYFS_VERSION;
-	super->extent_tree_blocknr = 1;
-	super->fs_tree_blocknr = 3;
-	super->total_blocks = devsize;
-	super->lower_bounds = MIN_LOWER_BOUNDS;	/* min for testing tree ops */
+	memset(super_block, 0, sizeof(super_block));
+	sb->super_magic = SUPER_MAGIC;
+	sb->version = BABYFS_VERSION;
+	sb->extent_tree_blocknr = 1;
+	sb->fs_tree_blocknr = 3;
+	sb->total_blocks = devsize;
+	sb->lower_bounds = MIN_LOWER_BOUNDS;	/* min for testing tree ops */
 
-	index = (struct index_node *) blocks[1];
+	caches[1] = init_block(1);
+	index = (struct index_node *) caches[1]->contents;
 	index->header.header_magic = HEADER_MAGIC;
 	index->header.blocknr = 1;
 	index->header.type = TYPE_EXT_IDX;
@@ -136,7 +138,8 @@ void my_mkfs ()
 	index->key_ptrs[4].key.offset = 1;
 	index->key_ptrs[4].blocknr = 2;
 
-	leaf = (struct leaf_node *) blocks[2];
+	caches[2] = init_block(2);
+	leaf = (struct leaf_node *) caches[2]->contents;
 	leaf->header.header_magic = HEADER_MAGIC;
 	leaf->header.blocknr = 2;
 	leaf->header.type = TYPE_EXT_LEAF;
@@ -173,7 +176,8 @@ void my_mkfs ()
 	leaf->items[4].offset = BLOCKSIZE;	/* not in block */
 	leaf->items[4].size = 0;
 
-	index = (struct index_node *) blocks[3];
+	caches[3] = init_block(3);
+	index = (struct index_node *) caches[3]->contents;
 	index->header.header_magic = HEADER_MAGIC;
 	index->header.blocknr = 3;
 	index->header.type = TYPE_FS_IDX;
@@ -185,7 +189,8 @@ void my_mkfs ()
 	index->key_ptrs[0].key.offset = INODE_KEY_OFFSET;
 	index->key_ptrs[0].blocknr = 4;
 
-	leaf = (struct leaf_node *) blocks[4];
+	caches[4] = init_block(4);
+	leaf = (struct leaf_node *) caches[4]->contents;
 	leaf->header.header_magic = HEADER_MAGIC;
 	leaf->header.blocknr = 4;
 	leaf->header.type = TYPE_FS_LEAF;
@@ -203,8 +208,9 @@ void my_mkfs ()
 	imd->mtime = time(NULL);
 
 	for (i = 1; i <= 4; i++) {
-		if (write_block(i, blocks[i])) return;
+		put_block(caches[i]);
 	}
+	flush_all();
 	/* write superblock last */
-	write_block(0, blocks[0]);
+	write_block(0, super_block);
 }

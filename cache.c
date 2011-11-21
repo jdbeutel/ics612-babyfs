@@ -7,7 +7,29 @@
 #include "p6.h"		/* dev_open(), etc */
 #include "babyfs.h"	/* struct cache, etc */
 
-#define CACHE_COUNT 100
+/* Babyfs needs enough cache to hold all modified tree nodes for a single op,
+ * to avoid the risk of thrashing while updating the extent tree.
+ * This compilation unit has no knowledge of trees, but the change required
+ * for one operation is generally at least one path from root to leaf
+ * on both extent and FS tree, which have a maximum depth of 6 nodes each.
+ * In addition to those 12 nodes, branches from the paths (up to 5 nodes)
+ * may be required for proactive balancing of the nodes along the paths,
+ * deallocation of blocks, and ops that change multiple keys that span
+ * multiple nodes (e.g., when deleting a file with many extents).
+ * 200 nodes of cache seems like more than enough for a single operation
+ * on a tree with bounds 20..60.
+ *
+ * File data must be written after the modifications
+ * of all trees are completed, so that the amount of
+ * file data may exceed the cache.  The cache size
+ * is limited by the project 6 limitation of using a fixed amount of RAM
+ * "on the order of 1MB or (much) less."  (That would be on the order of 1000
+ * nodes of cache.)  The superblock must be updated last, after all blocks
+ * are put back and flushed, so none of the changes will become effective
+ * if the write is interrupted.
+ */
+
+#define CACHE_COUNT 200
 static struct cache caches[CACHE_COUNT];
 static struct cache *lru;	/* least-recently-used (free) list */
 static struct cache *mru;	/* most-recently-used; other end of the list */
@@ -32,6 +54,17 @@ PRIVATE void init_caches() {
 	}
 }
 
+/* finds a cache that was read from or will write to the given block number.
+ * It is the responsibility of the caller of the functions in this
+ * compilation unit to not request a block for reading or writing
+ * that isn't already allocated (in the extent tree), so the same
+ * block number will never be read from and written to at the same time.
+ *
+ * Future enhancements to this project could use additional RAM
+ * for caches while it's available, and use hash lists for read
+ * and write block numbers to avoid the linear search of a large
+ * number of caches.
+ */
 PRIVATE struct cache *find_cache_for(blocknr_t n) {
 	struct cache *c;
 	int i;
@@ -46,19 +79,39 @@ PRIVATE struct cache *find_cache_for(blocknr_t n) {
 	return NULL;
 }
 
-PRIVATE void remove_lru(struct cache *c) {
-	assert(!c->users);
+/* removes the given cache from anywhere in the least-recently-used list */
+PRIVATE void remove_from_lru(struct cache *c) {
+	assert(!c->users && !c->will_write);
 	if (!c->less_recently_used) {
 		assert(c == lru);
 		lru = c->more_recently_used;
 	} else {
 		c->less_recently_used->more_recently_used = c->more_recently_used;
+		c->less_recently_used = NULL;
 	}
 	if (!c->more_recently_used) {
 		assert(c == mru);
 		mru = c->less_recently_used;
 	} else {
 		c->more_recently_used->less_recently_used = c->less_recently_used;
+		c->more_recently_used = NULL;
+	}
+}
+
+/* adds the given cache to the most-recently-used end of the LRU list */
+PRIVATE void add_to_mru(struct cache *c) {
+	assert(!c->users && !c->will_write);
+	assert(!c->less_recently_used);
+	assert(!c->more_recently_used);
+	if (!mru) {
+		assert(!lru);	/* can't have one end of the list without the other */
+		mru = c;
+		lru = c;
+	} else {
+		c->less_recently_used = mru->less_recently_used;
+		assert(!mru->more_recently_used);
+		mru->more_recently_used = c;
+		mru = c;
 	}
 }
 
@@ -78,8 +131,8 @@ PUBLIC struct cache *init_block(blocknr_t write_blocknr) {
 	init_caches();
 	assert(dev_open() > write_blocknr);
 	c = find_cache_for(write_blocknr);
-	if (c) {
-		/* caller couldn't have allocated that block were it in use */
+	if (c) {	/* must have been freed by a previous generation */
+		/* caller couldn't have allocated that block were it in use now */
 		assert(!c->users);
 	} else {
 		if (!lru) {
@@ -91,7 +144,7 @@ PUBLIC struct cache *init_block(blocknr_t write_blocknr) {
 		}
 		c = lru;
 	}
-	remove_lru(c);
+	remove_from_lru(c);
 	memset(c, 0, sizeof(*c));
 	c->was_read = FALSE;	/* just being explicit */
 	c->will_write = TRUE;
@@ -101,6 +154,7 @@ PUBLIC struct cache *init_block(blocknr_t write_blocknr) {
 }
 
 /* marks a block for writing, so it represents both the read and write block.
+ * This is how a block is modified on disk, by copying changes to a new block.
  * write_blocknr - already allocated in extent tree by caller
  */ 
 PUBLIC int shadow_block_to(struct cache *c, blocknr_t write_blocknr) {	
@@ -108,14 +162,37 @@ PUBLIC int shadow_block_to(struct cache *c, blocknr_t write_blocknr) {
 	assert(dev_open() > write_blocknr);
 }
 
-/* decrements users count, to allow flushing */
-PUBLIC int put_block(struct cache *c) {
+/* decrements users count, to allow flushing and reuse of cache */
+PUBLIC void put_block(struct cache *c) {
 	assert(caches_initialized);
+	assert(c->users);
+	c->users--;
+	if (!c->users && !c->will_write) {
+		add_to_mru(c);	/* ready for reuse */
+	}
 }
 
 /* writes all blocks that will_write and are not in use. */
 PUBLIC int flush_all() {
+	struct cache *c;
+	int i, ret;
+
 	assert(caches_initialized);
+	for (i = 0; i < CACHE_COUNT; i++) {
+		c = &caches[i];
+		if (!c->users && c->will_write) {
+			ret = write_block(c->write_blocknr, c->contents);
+			if (ret)	return ret;
+			c->will_write = FALSE;
+			c->was_read = TRUE;
+			c->read_blocknr = c->write_blocknr;
+			add_to_mru(c);	/* ready for reuse */
+		}
+	}
+	/* Future enhancements to this project could use an elevator algorithm
+	 * along a write hash list with a scattered write.
+	 */
+	return SUCCESS;
 }
 
 /* vim: set ts=4 sw=4: */

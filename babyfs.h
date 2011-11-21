@@ -115,16 +115,18 @@ struct superblock {	/* first block of device */
 #define NULL ((void *)0)
 #define TRUE 1
 #define FALSE 0
+#define SUCCESS 0
+#define FAILURE -1
 #define PRIVATE static
 #define PUBLIC
 #define MAX_LEVEL 6
 
 struct cache {
-	blocknr_t read_blocknr;		/* if was_read, where from */
+	unsigned int	was_read:1,	/* was read from or written to device */
+			will_write:1;	/* was allocated, needs flushing */
+	blocknr_t read_blocknr;		/* if was_read, where from/to */
 	blocknr_t write_blocknr;	/* if allocated for writing */
-	int users;			/* how many currently using */
-	unsigned int	was_read:1,	/* was read from device */
-			will_write:1;	/* allocated, needs flushing */
+	unsigned int users;		/* number currently using (recursive) */
 	block contents;
 	struct cache	*less_recently_used,
 			*more_recently_used;
@@ -134,7 +136,7 @@ struct cache {
 extern struct cache *get_block(blocknr_t blocknr);
 extern int shadow_block_to(struct cache *c, blocknr_t write_blocknr);
 extern struct cache *init_block(blocknr_t write_blocknr);
-extern int put_block(struct cache *c);
+extern void put_block(struct cache *c);
 extern int flush_all();
 
 struct path {
