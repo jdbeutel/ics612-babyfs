@@ -51,23 +51,21 @@ struct key_ptr {		/* in index nodes */
 	blocknr_t blocknr;
 };
 
-#define NODE_PAYLOAD_BYTES	(BLOCKSIZE-sizeof(struct header))
-#define MAX_KEY_PTRS	(NODE_PAYLOAD_BYTES/sizeof(struct key_ptr))
-struct index_node {
-	struct header header;
-	struct key_ptr key_ptrs[MAX_KEY_PTRS];
-};
-
 struct item {		/* in leaf nodes */
 	struct key key;
 	item_offset_t offset;	/* of metadata, in bytes from start of block */
 	item_size_t size;	/* of metadata, in bytes */
 };
 
+#define NODE_PAYLOAD_BYTES	(BLOCKSIZE-sizeof(struct header))
+#define MAX_KEY_PTRS	(NODE_PAYLOAD_BYTES/sizeof(struct key_ptr))
 #define MAX_ITEMS	(NODE_PAYLOAD_BYTES/sizeof(struct item))
-struct leaf_node {
+struct node {
 	struct header header;
-	struct item items[MAX_ITEMS];
+	union u {
+		struct key_ptr	key_ptrs[MAX_KEY_PTRS];	/* in index nodes */
+		struct item	items[MAX_ITEMS];	/* in leaf nodes */
+	} u;
 };
 
 #define INODE_DIR	0xd1
@@ -100,7 +98,7 @@ struct file_extent_metadata {
 
 struct superblock {	/* first block of device */
 	uint32_t super_magic;	/* magic number protects from my_mkfs() */
-	uint8_t version;
+	uint8_t version;	/* 0 */
 	blocknr_t extent_tree_blocknr;	/* root */
 	blocknr_t fs_tree_blocknr;	/* root */
 	int total_blocks;	/* device size */
@@ -138,6 +136,19 @@ extern int shadow_block_to(struct cache *c, blocknr_t write_blocknr);
 extern struct cache *init_block(blocknr_t write_blocknr);
 extern void put_block(struct cache *c);
 extern int flush_all();
+
+struct root;
+struct fs_info {
+	struct root *extent_root;
+	struct root *fs_root;
+	int total_blocks;	/* device size */
+	uint8_t lower_bounds;	/* b for balancing inner nodes b..3b */
+	blocknr_t (*alloc_block)(struct root *extent_root, blocknr_t nearby);
+};
+struct root {
+	struct cache *node;
+	struct fs_info *fs_info;
+};
 
 struct path {
 	struct cache *nodes[MAX_LEVEL];
