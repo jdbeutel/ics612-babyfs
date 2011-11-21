@@ -5,7 +5,7 @@ OBJ = block.o cache.o p6.o tree.o
 	cc -c -o $@ $<
 
 runtest%: test%
-	rm simulated_device
+	rm -f simulated_device $<.od-X $<.od-c
 	dd if=/dev/zero of=simulated_device bs=1024 count=99
 	./$< 2>&1 | tee $<.out
 	od -Ax -c simulated_device > $<.od-c

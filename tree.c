@@ -2,7 +2,8 @@
 
 #include "babyfs.h"
 
-struct cache *init_node(blocknr_t blocknr, uint16_t type, uint16_t level) {
+PUBLIC struct cache *init_node(
+		blocknr_t blocknr, uint16_t type, uint16_t level) {
 	struct cache *c;
 
 	c = init_block(blocknr);

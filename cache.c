@@ -57,7 +57,8 @@ PRIVATE void init_caches() {
  * It is the responsibility of the caller of the functions in this
  * compilation unit to not request a block for reading or writing
  * that isn't already allocated (in the extent tree), so the same
- * block number will never be read from and written to at the same time.
+ * block number will never be read from and written to at the same time
+ * (except for the superblock).
  *
  * Future enhancements to this project could use additional RAM
  * for caches while it's available, and use hash lists for read
@@ -80,7 +81,10 @@ PRIVATE struct cache *find_cache_for(blocknr_t n) {
 
 /* removes the given cache from anywhere in the least-recently-used list */
 PRIVATE void remove_from_lru(struct cache *c) {
+	struct cache *original_less_recently_used;
+
 	assert(!c->users && !c->will_write);
+	original_less_recently_used = c->less_recently_used;	/* before NULLing */
 	if (!c->less_recently_used) {
 		assert(c == lru);
 		lru = c->more_recently_used;
@@ -88,36 +92,65 @@ PRIVATE void remove_from_lru(struct cache *c) {
 		c->less_recently_used->more_recently_used = c->more_recently_used;
 		c->less_recently_used = NULL;
 	}
+	assert(!c->less_recently_used);
 	if (!c->more_recently_used) {
 		assert(c == mru);
-		mru = c->less_recently_used;
+		mru = original_less_recently_used;
 	} else {
-		c->more_recently_used->less_recently_used = c->less_recently_used;
+		c->more_recently_used->less_recently_used = original_less_recently_used;
 		c->more_recently_used = NULL;
 	}
+	assert(!c->less_recently_used && !c->more_recently_used);
 }
 
 /* adds the given cache to the most-recently-used end of the LRU list */
 PRIVATE void add_to_mru(struct cache *c) {
 	assert(!c->users && !c->will_write);
-	assert(!c->less_recently_used);
-	assert(!c->more_recently_used);
+	assert(!c->less_recently_used && !c->more_recently_used);
 	if (!mru) {
 		assert(!lru);	/* can't have one end of the list without the other */
 		mru = c;
 		lru = c;
 	} else {
-		c->less_recently_used = mru->less_recently_used;
+		assert(lru);	/* must have the other end of the list too */
+		c->less_recently_used = mru;
 		assert(!mru->more_recently_used);
 		mru->more_recently_used = c;
 		mru = c;
 	}
 }
 
-/* gets a block from the device or cache. */
+/* gets a block from the cache or device.
+ * blocknr - matching either read or write block.
+ */ 
 PUBLIC struct cache *get_block(blocknr_t blocknr) {
+	struct cache *c;
+
 	init_caches();
 	assert(dev_open() > blocknr);
+	c = find_cache_for(blocknr);
+	if (c) {
+		if (!c->users) {
+			remove_from_lru(c);		/* will be used now */
+		}
+	} else {	/* get a free cache and read the block from the device */
+		if (!lru) {
+			flush_all();	/* try to free up some dirty ones */
+			if (!lru) {
+				errno = ENOBUFS;	/* all are in use */
+				return NULL;
+			}
+		}
+		c = lru;
+		remove_from_lru(c);
+		c->read_blocknr = blocknr;
+		if (read_block(blocknr, c->u.contents) == FAILURE) {
+			return NULL;
+		}
+		c->was_read = TRUE;
+	}
+	c->users++;
+	return c;
 }
 
 /* initializes a new block for writing for the first time.
@@ -125,7 +158,6 @@ PUBLIC struct cache *get_block(blocknr_t blocknr) {
  */ 
 PUBLIC struct cache *init_block(blocknr_t write_blocknr) {
 	struct cache *c;
-	int hash_code;
 
 	init_caches();
 	assert(dev_open() > write_blocknr);
@@ -154,11 +186,19 @@ PUBLIC struct cache *init_block(blocknr_t write_blocknr) {
 
 /* marks a block for writing, so it represents both the read and write block.
  * This is how a block is modified on disk, by copying changes to a new block.
+ * c - previously gotten cache to shaddow
  * write_blocknr - already allocated in extent tree by caller
  */ 
-PUBLIC int shadow_block_to(struct cache *c, blocknr_t write_blocknr) {	
+PUBLIC void shadow_block_to(struct cache *c, blocknr_t write_blocknr) {	
 	assert(caches_initialized);
 	assert(dev_open() > write_blocknr);
+	assert(c->users && !c->will_write);
+	if (write_blocknr != SUPERBLOCK_NR) {
+		/* always shadow to a new block (except for the superblock) */
+		assert(!c->was_read || write_blocknr != c->read_blocknr);
+	}
+	c->will_write = TRUE;
+	c->write_blocknr = write_blocknr;
 }
 
 /* decrements users count, to allow flushing and reuse of cache */
@@ -192,6 +232,35 @@ PUBLIC int flush_all() {
 	 * along a write hash list with a scattered write.
 	 */
 	return SUCCESS;
+}
+
+PRIVATE int any_dirty() {
+	int i;
+
+	for (i = 0; i < CACHE_COUNT; i++) {
+		if (caches[i].will_write) {
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+
+PUBLIC int write_superblock(struct fs_info fs_info) {
+	struct cache *c;
+	struct superblock *sb;
+
+	init_caches();
+	assert(!any_dirty());	/* flush_all() is called before this function */
+	c = init_block(SUPERBLOCK_NR);	/* not shadowed, for my_mkfs() */
+	sb = &c->u.superblock;
+	sb->super_magic = SUPER_MAGIC;
+	sb->version = BABYFS_VERSION;
+	sb->extent_tree_blocknr = fs_info.extent_root.blocknr;
+	sb->fs_tree_blocknr = fs_info.fs_root.blocknr;
+	sb->total_blocks = fs_info.total_blocks;
+	sb->lower_bounds = fs_info.lower_bounds;
+	put_block(c);
+	return flush_all();
 }
 
 /* vim: set ts=4 sw=4: */

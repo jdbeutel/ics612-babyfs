@@ -131,33 +131,36 @@ struct cache {
 	union u2 {
 		block contents;
 		struct node node;
+		struct superblock superblock;
 	} u;
 };
 
-/* cache.c */
-extern struct cache *get_block(blocknr_t blocknr);
-extern int shadow_block_to(struct cache *c, blocknr_t write_blocknr);
-extern struct cache *init_block(blocknr_t write_blocknr);
-extern void put_block(struct cache *c);
-extern int flush_all();
-
-struct root;
+struct fs_info;
+struct root {
+	struct cache *node;
+	blocknr_t blocknr;	/* for after node is put back */
+	struct fs_info *fs_info;
+};
 struct fs_info {
-	struct root *extent_root;
-	struct root *fs_root;
+	struct root extent_root;
+	struct root fs_root;
 	int total_blocks;	/* device size */
 	uint8_t lower_bounds;	/* b for balancing inner nodes b..3b */
 	blocknr_t (*alloc_block)(struct root *extent_root, blocknr_t nearby);
-};
-struct root {
-	struct cache *node;
-	struct fs_info *fs_info;
 };
 
 struct path {
 	struct cache *nodes[MAX_LEVEL];
 	int slots[MAX_LEVEL];
 };
+
+/* cache.c */
+extern struct cache *get_block(blocknr_t blocknr);
+extern void shadow_block_to(struct cache *c, blocknr_t write_blocknr);
+extern struct cache *init_block(blocknr_t write_blocknr);
+extern void put_block(struct cache *c);
+extern int flush_all();
+extern int write_superblock(struct fs_info fs_info);
 
 /* tree.c */
 extern struct cache *init_node(

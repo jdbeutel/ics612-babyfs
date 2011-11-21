@@ -75,34 +75,33 @@ int my_rmdir (const char * path)
 void my_mkfs ()
 {
 	block super_block;
+	struct fs_info fs_info;
 	struct cache *caches[5];
 	struct superblock *sb;
 	struct node *node;
 	struct inode_metadata *imd;
 	int devsize, i;
 
-	devsize = dev_open();
-	if (devsize < 0) return;
+	caches[0] = get_block(SUPERBLOCK_NR);
+	if (!caches[0])	return;
 
-	if (read_block(SUPERBLOCK_NR, super_block)) return;
-	sb = (struct superblock *) super_block;
+	sb = &caches[0]->u.superblock;
 	if (sb->super_magic == SUPER_MAGIC) {
 		fprintf(stderr, "device already has this file system\n");
 		return;
 	}
+	devsize = dev_open();
 	if (devsize < 5) {
 		fprintf(stderr, "device too small (%d blocks)\n", devsize);
 		return;
 	}
-	memset(super_block, 0, sizeof(super_block));
-	sb->super_magic = SUPER_MAGIC;
-	sb->version = BABYFS_VERSION;
-	sb->extent_tree_blocknr = 1;
-	sb->fs_tree_blocknr = 3;
-	sb->total_blocks = devsize;
-	sb->lower_bounds = MIN_LOWER_BOUNDS;	/* min for testing tree ops */
+	fs_info.total_blocks = devsize;
+	fs_info.lower_bounds = MIN_LOWER_BOUNDS;	/* min for testing tree ops */
 
 	caches[1] = init_node(1, TYPE_EXT_IDX, 0);	/* root node */
+	fs_info.extent_root.node = caches[1];
+	fs_info.extent_root.blocknr = caches[1]->write_blocknr;
+	fs_info.extent_root.fs_info = &fs_info;
 	node = &caches[1]->u.node;
 	node->header.nritems = 5;
 
@@ -167,6 +166,9 @@ void my_mkfs ()
 	node->u.items[4].size = 0;
 
 	caches[3] = init_node(3, TYPE_FS_IDX, 0);	/* root node */
+	fs_info.fs_root.node = caches[3];
+	fs_info.fs_root.blocknr = caches[3]->write_blocknr;
+	fs_info.fs_root.fs_info = &fs_info;
 	node = &caches[3]->u.node;
 	node->header.nritems = 1;
 
@@ -193,6 +195,8 @@ void my_mkfs ()
 		put_block(caches[i]);
 	}
 	flush_all();
-	/* write superblock last */
-	write_block(0, super_block);
+	put_block(caches[0]);
+	write_superblock(fs_info);	/* write superblock last */
 }
+
+/* vim: set ts=4 sw=4: */
