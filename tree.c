@@ -4,14 +4,12 @@
 
 struct cache *init_node(blocknr_t blocknr, uint16_t type, uint16_t level) {
 	struct cache *c;
-	struct node *node;
 
 	c = init_block(blocknr);
-	node = (struct node *) c->contents;
-	node->header.header_magic = HEADER_MAGIC;
-	node->header.blocknr = blocknr;
-	node->header.type = type;
-	node->header.nritems = 0;
-	node->header.level = level;
+	c->u.node.header.header_magic = HEADER_MAGIC;
+	c->u.node.header.blocknr = blocknr;
+	c->u.node.header.type = type;
+	c->u.node.header.nritems = 0;
+	c->u.node.header.level = level;
 	return c;
 }

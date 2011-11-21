@@ -2,6 +2,7 @@
 
 #include <stdint.h>	/* uint32_t, etc */
 #include <time.h>	/* time_t */
+#include "p6.h"
 
 /* ***************************************************
  * The following types are in RAM and on the device;
@@ -125,9 +126,12 @@ struct cache {
 	blocknr_t read_blocknr;		/* if was_read, where from/to */
 	blocknr_t write_blocknr;	/* if allocated for writing */
 	unsigned int users;		/* number currently using (recursive) */
-	block contents;
 	struct cache	*less_recently_used,
 			*more_recently_used;
+	union u2 {
+		block contents;
+		struct node node;
+	} u;
 };
 
 /* cache.c */
@@ -154,3 +158,7 @@ struct path {
 	struct cache *nodes[MAX_LEVEL];
 	int slots[MAX_LEVEL];
 };
+
+/* tree.c */
+extern struct cache *init_node(
+		blocknr_t blocknr, uint16_t type, uint16_t level);

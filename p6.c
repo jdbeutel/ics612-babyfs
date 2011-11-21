@@ -9,7 +9,6 @@
 #include <stdio.h>
 #include <time.h>	/* time() */
 #include <string.h>	/* memset() */
-#include "p6.h"
 #include "babyfs.h"
 
 /* open an exisiting file for reading or writing */
@@ -103,13 +102,9 @@ void my_mkfs ()
 	sb->total_blocks = devsize;
 	sb->lower_bounds = MIN_LOWER_BOUNDS;	/* min for testing tree ops */
 
-	caches[1] = init_block(1);
-	node = (struct node *) caches[1]->contents;
-	node->header.header_magic = HEADER_MAGIC;
-	node->header.blocknr = 1;
-	node->header.type = TYPE_EXT_IDX;
+	caches[1] = init_node(1, TYPE_EXT_IDX, 0);	/* root node */
+	node = &caches[1]->u.node;
 	node->header.nritems = 5;
-	node->header.level = 0;	/* root node */
 
 	/* todo: bootstrap root node and then add these via basic tree ops */
 	node->u.key_ptrs[0].key.objectid = 0;
@@ -137,13 +132,9 @@ void my_mkfs ()
 	node->u.key_ptrs[4].key.offset = 1;
 	node->u.key_ptrs[4].blocknr = 2;
 
-	caches[2] = init_block(2);
-	node = (struct node *) caches[2]->contents;
-	node->header.header_magic = HEADER_MAGIC;
-	node->header.blocknr = 2;
-	node->header.type = TYPE_EXT_LEAF;
+	caches[2] = init_node(2, TYPE_EXT_LEAF, 1);
+	node = &caches[2]->u.node;
 	node->header.nritems = 5;
-	node->header.level = 1;
 
 	node->u.items[0].key.objectid = 0;
 	node->u.items[0].key.type = TYPE_SUPERBLOCK;
@@ -175,26 +166,18 @@ void my_mkfs ()
 	node->u.items[4].offset = BLOCKSIZE;	/* not in block */
 	node->u.items[4].size = 0;
 
-	caches[3] = init_block(3);
-	node = (struct node *) caches[3]->contents;
-	node->header.header_magic = HEADER_MAGIC;
-	node->header.blocknr = 3;
-	node->header.type = TYPE_FS_IDX;
+	caches[3] = init_node(3, TYPE_FS_IDX, 0);	/* root node */
+	node = &caches[3]->u.node;
 	node->header.nritems = 1;
-	node->header.level = 0;	/* root node */
 
 	node->u.key_ptrs[0].key.objectid = ROOT_DIR_INODE;	/* root dir */
 	node->u.key_ptrs[0].key.type = TYPE_INODE;
 	node->u.key_ptrs[0].key.offset = INODE_KEY_OFFSET;
 	node->u.key_ptrs[0].blocknr = 4;
 
-	caches[4] = init_block(4);
-	node = (struct node *) caches[4]->contents;
-	node->header.header_magic = HEADER_MAGIC;
-	node->header.blocknr = 4;
-	node->header.type = TYPE_FS_LEAF;
+	caches[4] = init_node(4, TYPE_FS_LEAF, 1);
+	node = &caches[4]->u.node;
 	node->header.nritems = 1;
-	node->header.level = 1;
 
 	node->u.items[0].key.objectid = ROOT_DIR_INODE;
 	node->u.items[0].key.type = TYPE_INODE;

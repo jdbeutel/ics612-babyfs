@@ -4,7 +4,6 @@
 #include <assert.h>	/* assert() */
 #include <string.h>	/* memset() */
 #include <errno.h>	/* ENOBUFS */
-#include "p6.h"		/* dev_open(), etc */
 #include "babyfs.h"	/* struct cache, etc */
 
 /* Babyfs needs enough cache to hold all modified tree nodes for a single op,
@@ -181,7 +180,7 @@ PUBLIC int flush_all() {
 	for (i = 0; i < CACHE_COUNT; i++) {
 		c = &caches[i];
 		if (!c->users && c->will_write) {
-			ret = write_block(c->write_blocknr, c->contents);
+			ret = write_block(c->write_blocknr, c->u.contents);
 			if (ret)	return ret;
 			c->will_write = FALSE;
 			c->was_read = TRUE;

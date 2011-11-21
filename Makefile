@@ -1,5 +1,5 @@
 DEPS = babyfs.h p6.h cache.h
-OBJ = block.o cache.o p6.o
+OBJ = block.o cache.o p6.o tree.o
 
 %.o: %.c $(DEPS)
 	cc -c -o $@ $<
