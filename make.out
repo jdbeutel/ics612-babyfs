@@ -1,26 +1,10 @@
-cc    -c -o cache.o cache.c
+cc    -c -o tree.o tree.c
 cc -o test1 test1.o block.o cache.o p6.o tree.o
-rm -f simulated_device test1.od-X test1.od-c
-dd if=/dev/zero of=simulated_device bs=1024 count=99
-99+0 records in
-99+0 records out
-101376 bytes (101 kB) copied, 0.00190372 s, 53.3 MB/s
-./test1 2>&1 | tee test1.out
-od -Ax -c simulated_device > test1.od-c
-od -Ax -X simulated_device > test1.od-X
-git diff test1.od-X
-diff --git a/test1.od-X b/test1.od-X
-index b4f487a..58f8dbb 100644
---- a/test1.od-X
-+++ b/test1.od-X
-@@ -26,8 +26,8 @@
- 001010 00000000 000000f0 00000000 002003e0
- 001020 00000000 00000000 00000000 00000000
- *
--0013e0 000000d1 00000000 4ec9dd28 00000000
--0013f0 00000000 00000000 4ec9dd28 00000000
-+0013e0 000000d1 00000000 4eca1273 00000000
-+0013f0 00000000 00000000 4eca1273 00000000
- 001400 00000000 00000000 00000000 00000000
- *
- 018c00
+tree.o: In function `search_slot':
+tree.c:(.text+0x4a2): undefined reference to `insert_key_ptr'
+tree.c:(.text+0x556): undefined reference to `ensure_leaf_space'
+tree.c:(.text+0x5f7): undefined reference to `update_key_ptr'
+tree.c:(.text+0x633): undefined reference to `split_node'
+tree.c:(.text+0x671): undefined reference to `fix_node'
+collect2: ld returned 1 exit status
+make: *** [test1] Error 1

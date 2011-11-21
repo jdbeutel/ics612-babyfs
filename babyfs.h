@@ -26,6 +26,10 @@ typedef uint16_t item_size_t;	/* need 10 bits for bytes within a block */
 #define TYPE_FS_LEAF		0xe4
 #define TYPE_FILE_DATA		0xe5
 
+#define LEAF_TYPE(x)	((x) == TYPE_EXT_LEAF || (x) == TYPE_FS_LEAF)
+#define INDEX_TYPE(x)	((x) == TYPE_EXT_IDX || (x) == TYPE_FS_IDX)
+#define LEAF_TYPE_FOR(x)((x) == TYPE_EXT_IDX ? TYPE_EXT_LEAF : TYPE_FS_LEAF)
+
 #define HEADER_MAGIC	0xbacababf
 /* 8 bits would be enough for the type, but the compiler allocs 32 bits
  * in struct key anyway, and this lines up nicely with od -X, so I won't
@@ -34,7 +38,7 @@ typedef uint16_t item_size_t;	/* need 10 bits for bytes within a block */
 struct header {			/* starts all nodes in a tree */
 	uint32_t header_magic;	/* makes easy to spot in hex dumps */
 	uint16_t type;		/* for testing, redundant with key.type */
-	uint16_t level;		/* number of nodes to get to root */
+	uint16_t level;		/* number of nodes down to a leaf */
 	blocknr_t blocknr;	/* for testing and simple consistency check */
 	uint8_t nritems;	/* populated key or item slots */
 	uint8_t filler1;	/* round up to 16 bytes for neat hex dumps */
@@ -93,6 +97,7 @@ struct file_extent_metadata {
 
 #define MIN_LOWER_BOUNDS	2	/* for testing tree ops */
 #define MAX_LOWER_BOUNDS	(MAX_KEY_PTRS/3)
+#define UPPER_BOUNDS(x)		((x)*3)
 #define SUPER_MAGIC		0xaaa1babf
 #define BABYFS_VERSION		0
 #define SUPERBLOCK_NR		0
@@ -116,6 +121,8 @@ struct superblock {	/* first block of device */
 #define FALSE 0
 #define SUCCESS 0
 #define FAILURE -1
+#define KEY_FOUND 0
+#define KEY_NOT_FOUND 1
 #define PRIVATE static
 #define PUBLIC
 #define MAX_LEVEL 6
@@ -149,6 +156,7 @@ struct fs_info {
 	blocknr_t (*alloc_block)(struct root *extent_root, blocknr_t nearby);
 };
 
+/* the path from a root to a leaf.  The leaf is level 0. */
 struct path {
 	struct cache *nodes[MAX_LEVEL];
 	int slots[MAX_LEVEL];
@@ -165,3 +173,4 @@ extern int write_superblock(struct fs_info fs_info);
 /* tree.c */
 extern struct cache *init_node(
 		blocknr_t blocknr, uint16_t type, uint16_t level);
+extern blocknr_t mkfs_alloc_block(struct root *extent_root, blocknr_t nearby);

@@ -97,8 +97,9 @@ void my_mkfs ()
 	}
 	fs_info.total_blocks = devsize;
 	fs_info.lower_bounds = MIN_LOWER_BOUNDS;	/* min for testing tree ops */
+	fs_info.alloc_block = mkfs_alloc_block;	/* for bootstrapping extent tree */
 
-	caches[1] = init_node(1, TYPE_EXT_IDX, 0);	/* root node */
+	caches[1] = init_node(1, TYPE_EXT_IDX, 1);	/* root node */
 	fs_info.extent_root.node = caches[1];
 	fs_info.extent_root.blocknr = caches[1]->write_blocknr;
 	fs_info.extent_root.fs_info = &fs_info;
@@ -131,7 +132,7 @@ void my_mkfs ()
 	node->u.key_ptrs[4].key.offset = 1;
 	node->u.key_ptrs[4].blocknr = 2;
 
-	caches[2] = init_node(2, TYPE_EXT_LEAF, 1);
+	caches[2] = init_node(2, TYPE_EXT_LEAF, 0);
 	node = &caches[2]->u.node;
 	node->header.nritems = 5;
 
@@ -165,7 +166,7 @@ void my_mkfs ()
 	node->u.items[4].offset = BLOCKSIZE;	/* not in block */
 	node->u.items[4].size = 0;
 
-	caches[3] = init_node(3, TYPE_FS_IDX, 0);	/* root node */
+	caches[3] = init_node(3, TYPE_FS_IDX, 1);	/* root node */
 	fs_info.fs_root.node = caches[3];
 	fs_info.fs_root.blocknr = caches[3]->write_blocknr;
 	fs_info.fs_root.fs_info = &fs_info;
@@ -177,7 +178,7 @@ void my_mkfs ()
 	node->u.key_ptrs[0].key.offset = INODE_KEY_OFFSET;
 	node->u.key_ptrs[0].blocknr = 4;
 
-	caches[4] = init_node(4, TYPE_FS_LEAF, 1);
+	caches[4] = init_node(4, TYPE_FS_LEAF, 0);
 	node = &caches[4]->u.node;
 	node->header.nritems = 1;
 
