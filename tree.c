@@ -62,49 +62,112 @@ PRIVATE int compare_keys(struct key *k1, struct key *k2) {
 	return 0;
 }
 
-PRIVATE int ensure_will_write(struct root *r, struct cache *node) {
+PRIVATE int update_ptr(struct root *r, struct path *p, int level, blocknr_t b);
+
+PRIVATE int ensure_will_write(struct root *r, struct path *p, int level) {
+	int ret;
 	blocknr_t shadow;
+	struct cache *node = p->nodes[level];
 
 	if (!node->will_write) {
-		assert(node->was_read);
+		assert(node->was_read);		/* must have come from somewhere */
 		shadow = do_alloc(r, node);
 		if (!shadow) return -ENOSPC;
 		shadow_block_to(node, shadow);
+		if (!is_root_level(level, p)) {
+			ret = update_ptr(r, p, level + 1, shadow);
+			if (ret) return ret;
+		}
 	}
 	return SUCCESS;
 }
 
-PRIVATE int update_key_ptr(struct root *r, struct cache *node, int slot,
-							struct key *key, blocknr_t blocknr) {
-	struct key_ptr *kp = &node->u.node.u.key_ptrs[slot];
+PRIVATE int update_ptr(struct root *r, struct path *p, int level, blocknr_t b) {
+	struct cache *node = p->nodes[level];
+	struct key_ptr *kp = &node->u.node.u.key_ptrs[p->slots[level]];
 	int ret;
 
-	ret = ensure_will_write(r, node);
+	ret = ensure_will_write(r, p, level);
 	if (ret) return ret;
-	kp->key.objectid = key->objectid;
-	kp->key.type = key->type;
-	kp->key.offset = key->offset;
-	kp->blocknr = blocknr;
+	kp->blocknr = b;
 	return SUCCESS;
 }
 
-PRIVATE int insert_key_ptr(struct root *r, struct cache *node, int slot,
-							struct key *key, blocknr_t blocknr) {
+PRIVATE int update_key_ptr(struct root *r, struct path *p, int level,
+							struct key *key, blocknr_t b) {
+	struct cache *node = p->nodes[level];
+	struct key_ptr *kp = &node->u.node.u.key_ptrs[p->slots[level]];
 	int ret;
+
+	ret = ensure_will_write(r, p, level);
+	if (ret) return ret;
+	kp->blocknr = b;
+	kp->key.objectid = key->objectid;
+	kp->key.type = key->type;
+	kp->key.offset = key->offset;
+	return SUCCESS;
+}
+
+PRIVATE int insert_key_ptr(struct root *r, struct path *p, int level,
+							struct key *key, blocknr_t b) {
+	int slot = p->slots[level];
+	struct cache *node = p->nodes[level];
 	int ub = UPPER_BOUNDS(r->fs_info->lower_bounds);
 	struct header *hdr = &node->u.node.header;
 	int move_count = hdr->nritems - slot;
+	int ret;
 	assert(move_count >= 0);
 	assert(hdr->nritems < ub);	/* proactive splits guarantee room to insert */
 
-	ret = ensure_will_write(r, node);
+	ret = ensure_will_write(r, p, level);
 	if (ret) return ret;
 	if (move_count) {	/* memmove() looks like it needs this guard */
 		memmove(&node->u.node.u.key_ptrs[slot + 1],
 				&node->u.node.u.key_ptrs[slot],
 				move_count * sizeof(struct key_ptr));
 	}
-	return update_key_ptr(r, node, slot, key, blocknr);
+	return update_key_ptr(r, p, level, key, b);
+}
+
+PRIVATE int insert_item(struct root *r, struct path *p,
+							struct key *key, int ins_len) {
+	int slot = p->slots[0];
+	struct cache *leaf = p->nodes[0];
+	struct header *hdr = &leaf->u.node.header;
+	struct item *ip = &leaf->u.node.u.items[slot];
+	int last_offset = BLOCKSIZE;
+	int item_bytes = (void *) &leaf->u.node.u.items[hdr->nritems]
+								- (void *) &leaf->u.node;
+	int free;
+	int move_count = hdr->nritems - slot;
+	int ins_metadata = ins_len - sizeof(struct item);
+	int ret;
+
+	if (hdr->nritems) {
+		last_offset = leaf->u.node.u.items[hdr->nritems - 1].offset;
+	}
+	free = last_offset - item_bytes;
+	assert(ins_len <= free);
+	assert(move_count >= 0);
+	ret = ensure_will_write(r, p, 0);
+	if (ret) return ret;
+	if (move_count) {	/* memmove() looks like it needs this guard */
+		int move_metadata = (ip->offset + ip->size) - last_offset;
+		if (move_metadata && ins_metadata) {
+			/* have metadata and it needs to travel to the left */
+			memmove(&leaf->u.node + last_offset - ins_metadata,
+					&leaf->u.node + last_offset, move_metadata);
+		}
+		memmove(ip + sizeof(struct item), ip, move_count * sizeof(struct item));
+		ip->offset = last_offset - ins_metadata + move_metadata;
+	} else {
+		ip->offset = last_offset - ins_metadata;
+	}
+	ip->size = ins_metadata;
+	ip->key.objectid = key->objectid;
+	ip->key.type = key->type;
+	ip->key.offset = key->offset;
+	return SUCCESS;
 }
 
 /* splits the index node at the given level of the given path */
@@ -117,7 +180,7 @@ PRIVATE int split_index_node(struct root *r, struct path *p, int level) {
 	struct cache *right;
 	blocknr_t rightnr;
 
-	ret = ensure_will_write(r, left);
+	ret = ensure_will_write(r, p, level);
 	if (ret) return ret;
 	rightnr = do_alloc(r, left);
 	if (!rightnr) return -ENOSPC;
@@ -133,19 +196,21 @@ PRIVATE int split_index_node(struct root *r, struct path *p, int level) {
 		c = init_node(new_rootnr, right->u.node.header.type, level + 1);
 		if (!c) return -errno;
 		p->nodes[level + 1] = c;
-		ret = insert_key_ptr(r, c, 0, key_for(left, 0), left->write_blocknr);
 		p->slots[level + 1] = 0;	/* path on the left node */
+		ret = insert_key_ptr(r, p, level + 1,
+							key_for(left, 0), left->write_blocknr);
 		if (ret) return ret;
 		r->node = c;				/* new root node */
 		r->blocknr = new_rootnr;
 	}
-	ret = insert_key_ptr(r, p->nodes[level + 1], p->slots[level + 1],
-						key_for(left, nritems/2), rightnr);
+	p->slots[level + 1]++;		/* just for inserting in parent node */
+	ret = insert_key_ptr(r, p, level + 1, key_for(left, nritems/2), rightnr);
 	if (ret) return ret;
 	if (slot >= nritems/2) {		/* change path to the right-hand node */
-		p->slots[level + 1]++;		/* in parent node */
 		p->nodes[level] = right;	/* and split level */
 		p->slots[level] = slot - nritems/2;
+	} else {
+		p->slots[level + 1]--;		/* path back to left node in parent node */
 	}
 	memmove(&right->u.node.u.key_ptrs[0],
 			&left->u.node.u.key_ptrs[nritems/2],
@@ -161,7 +226,7 @@ PRIVATE int split_index_node(struct root *r, struct path *p, int level) {
 PRIVATE int fix_index_node(struct root *r, struct path *p, int level) {
 	assert(!is_root_level(level, p)); 	/* root has no lower bounds */
 	/* todo: move more key_ptrs from sibling to this node,
-	 * merging siblings if necessary
+	 * merging sibling if necessary
 	 */
 	return SUCCESS;
 }
@@ -229,7 +294,7 @@ PUBLIC int search_slot(struct root *r, struct key *key, struct path *p,
 				if (!leafnr) return -ENOSPC;
 				leaf = init_node(leafnr, LEAF_TYPE_FOR(hdr->type), 0);
 				if (!leaf) return -errno;
-				ret = insert_key_ptr(r, node, p->slots[level], key, leafnr);
+				ret = insert_key_ptr(r, p, level, key, leafnr);
 				if (ret) return ret;
 				p->nodes[0] = leaf;
 				p->slots[0] = 0;
@@ -238,8 +303,7 @@ PUBLIC int search_slot(struct root *r, struct key *key, struct path *p,
 			blocknr = ptr_for(node, p->slots[level]);
 			if (ins_len > 0) {		/* inserting */
 				if (i == 0) {		/* make leftmost key less */
-					ret = update_key_ptr(r, node, p->slots[level],
-										key, blocknr);
+					ret = update_key_ptr(r, p, level, key, blocknr);
 					if (ret) return ret;
 				}
 				if (hdr->nritems >= UPPER_BOUNDS(r->fs_info->lower_bounds)) {
@@ -256,6 +320,42 @@ PUBLIC int search_slot(struct root *r, struct key *key, struct path *p,
 			}
 		}
 	}
+}
+
+/* inserts an empty item into the tree at the given key.
+ * (This function's signature is modeled after the one in Btrfs.)
+ * r - the root of the tree to insert into
+ * key - the key to insert
+ * p - path result prepared
+ * ins_len - number of bytes needed for the item and its metadata in leaf.
+ * returns 0 if inserted, or a negative errno.
+ */
+PUBLIC int insert_empty_item(struct root *r, struct key *key, struct path *p,
+						int ins_len) {
+	int level;
+	int ret;
+	ret = search_slot(r, key, p, ins_len);
+	if (ret == KEY_FOUND) return -EEXIST;
+	if (ret != KEY_NOT_FOUND) return ret;
+	ret =  insert_item(r, p, key, ins_len);
+	if (ret) return ret;
+	level = 1;
+	do {
+		struct cache *node = p->nodes[level];
+		int slot = p->slots[level];
+		struct cache *child = p->nodes[level - 1];
+		int childnr = child->write_blocknr;
+		int child_slot = p->slots[level - 1];
+		if (level == 1) {
+			/* always insert key into first index level */
+			ret = insert_key_ptr(r, p, level, key, childnr);
+			if (ret) return ret;
+		} else if (child_slot == 0
+		&& compare_keys(key_for(child, 0), key_for(node, slot)) < 0) {
+			ret = update_key_ptr(r, p, level, key_for(child, 0), childnr);
+			if (ret) return ret;
+		}
+	} while(!is_root_level(level++, p));
 }
 
 /* vim: set ts=4 sw=4: */
