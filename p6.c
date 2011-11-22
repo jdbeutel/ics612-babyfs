@@ -104,67 +104,13 @@ void my_mkfs ()
 	fs_info.extent_root.blocknr = caches[1]->write_blocknr;
 	fs_info.extent_root.fs_info = &fs_info;
 	node = &caches[1]->u.node;
-	node->header.nritems = 5;
 
 	/* todo: bootstrap root node and then add these via basic tree ops */
-	node->u.key_ptrs[0].key.objectid = 0;
-	node->u.key_ptrs[0].key.type = TYPE_SUPERBLOCK;
-	node->u.key_ptrs[0].key.offset = 1;
-	node->u.key_ptrs[0].blocknr = 2;
-
-	node->u.key_ptrs[1].key.objectid = 1;
-	node->u.key_ptrs[1].key.type = TYPE_EXT_IDX;
-	node->u.key_ptrs[1].key.offset = 1;
-	node->u.key_ptrs[1].blocknr = 2;
-
-	node->u.key_ptrs[2].key.objectid = 2;
-	node->u.key_ptrs[2].key.type = TYPE_EXT_LEAF;
-	node->u.key_ptrs[2].key.offset = 1;
-	node->u.key_ptrs[2].blocknr = 2;
-
-	node->u.key_ptrs[3].key.objectid = 3;
-	node->u.key_ptrs[3].key.type = TYPE_FS_IDX;
-	node->u.key_ptrs[3].key.offset = 1;
-	node->u.key_ptrs[3].blocknr = 2;
-
-	node->u.key_ptrs[4].key.objectid = 4;
-	node->u.key_ptrs[4].key.type = TYPE_FS_LEAF;
-	node->u.key_ptrs[4].key.offset = 1;
-	node->u.key_ptrs[4].blocknr = 2;
-
-	caches[2] = init_node(2, TYPE_EXT_LEAF, 0);
-	node = &caches[2]->u.node;
-	node->header.nritems = 5;
-
-	node->u.items[0].key.objectid = 0;
-	node->u.items[0].key.type = TYPE_SUPERBLOCK;
-	node->u.items[0].key.offset = 1;
-	node->u.items[0].offset = BLOCKSIZE;	/* not in block */
-	node->u.items[0].size = 0;
-
-	node->u.items[1].key.objectid = 1;
-	node->u.items[1].key.type = TYPE_EXT_IDX;
-	node->u.items[1].key.offset = 1;
-	node->u.items[1].offset = BLOCKSIZE;	/* not in block */
-	node->u.items[1].size = 0;
-
-	node->u.items[2].key.objectid = 2;
-	node->u.items[2].key.type = TYPE_EXT_LEAF;
-	node->u.items[2].key.offset = 1;
-	node->u.items[2].offset = BLOCKSIZE;	/* not in block */
-	node->u.items[2].size = 0;
-
-	node->u.items[3].key.objectid = 3;
-	node->u.items[3].key.type = TYPE_FS_IDX;
-	node->u.items[3].key.offset = 1;
-	node->u.items[3].offset = BLOCKSIZE;	/* not in block */
-	node->u.items[3].size = 0;
-
-	node->u.items[4].key.objectid = 4;
-	node->u.items[4].key.type = TYPE_FS_LEAF;
-	node->u.items[4].key.offset = 1;
-	node->u.items[4].offset = BLOCKSIZE;	/* not in block */
-	node->u.items[4].size = 0;
+	insert_extent(&fs_info.extent_root, 0, TYPE_SUPERBLOCK, 1);
+	insert_extent(&fs_info.extent_root, 1, TYPE_EXT_IDX, 1);
+	insert_extent(&fs_info.extent_root, 2, TYPE_EXT_LEAF, 1);
+	insert_extent(&fs_info.extent_root, 3, TYPE_FS_IDX, 1);
+	insert_extent(&fs_info.extent_root, 4, TYPE_FS_LEAF, 1);
 
 	caches[3] = init_node(3, TYPE_FS_IDX, 1);	/* root node */
 	fs_info.fs_root.node = caches[3];
@@ -192,9 +138,9 @@ void my_mkfs ()
 	imd->ctime = time(NULL);
 	imd->mtime = time(NULL);
 
-	for (i = 1; i <= 4; i++) {
-		put_block(caches[i]);
-	}
+	put_block(caches[1]);
+	put_block(caches[3]);
+	put_block(caches[4]);
 	flush_all();
 	put_block(caches[0]);
 	write_superblock(fs_info);	/* write superblock last */

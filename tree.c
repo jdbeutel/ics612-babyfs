@@ -358,4 +358,20 @@ PUBLIC int insert_empty_item(struct root *r, struct key *key, struct path *p,
 	} while(!is_root_level(level++, p));
 }
 
+PUBLIC int insert_extent(struct root *r, uint32_t blocknr, uint16_t type,
+						uint32_t block_count) {
+	struct path p;
+	struct key key;
+	int ret, level = 0;
+
+	key.objectid = blocknr;
+	key.type = type;
+	key.offset = block_count;
+	ret = insert_empty_item(r, &key, &p, sizeof(struct item));
+	if (ret) return ret;
+	do {
+		put_block(p.nodes[level]);
+	} while(!is_root_level(level++, &p));
+}
+
 /* vim: set ts=4 sw=4: */

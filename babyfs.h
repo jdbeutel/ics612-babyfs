@@ -174,3 +174,5 @@ extern int write_superblock(struct fs_info fs_info);
 extern struct cache *init_node(
 		blocknr_t blocknr, uint16_t type, uint16_t level);
 extern blocknr_t mkfs_alloc_block(struct root *extent_root, blocknr_t nearby);
+extern  int insert_extent(struct root *r, uint32_t blocknr, uint16_t type,
+						uint32_t block_count);
