@@ -76,6 +76,7 @@ void my_mkfs ()
 {
 	struct fs_info fs_info;
 	struct root *er = &fs_info.extent_root;
+	struct root *fr = &fs_info.fs_root;
 	struct cache *caches[5];
 	struct cache *sb;
 	struct node *node;
@@ -99,7 +100,7 @@ void my_mkfs ()
 	fs_info.lower_bounds = MIN_LOWER_BOUNDS;	/* min for testing tree ops */
 	fs_info.alloc_block = mkfs_alloc_block;	/* for bootstrapping extent tree */
 
-	er->node = init_node(1, TYPE_EXT_IDX, 1);
+	er->node = init_node(1, TYPE_EXT_IDX, 1);	/* root node */
 	er->blocknr = er->node->write_blocknr;
 	er->fs_info = &fs_info;
 
@@ -110,11 +111,10 @@ void my_mkfs ()
 	insert_extent(er, 3, TYPE_FS_IDX, 1);
 	insert_extent(er, 4, TYPE_FS_LEAF, 1);
 
-	caches[3] = init_node(3, TYPE_FS_IDX, 1);	/* root node */
-	fs_info.fs_root.node = caches[3];
-	fs_info.fs_root.blocknr = caches[3]->write_blocknr;
-	fs_info.fs_root.fs_info = &fs_info;
-	node = &caches[3]->u.node;
+	fr->node = init_node(3, TYPE_FS_IDX, 1);	/* root node */
+	fr->blocknr = fr->node->write_blocknr;
+	fr->fs_info = &fs_info;
+	node = &fr->node->u.node;
 	node->header.nritems = 1;
 
 	node->u.key_ptrs[0].key.objectid = ROOT_DIR_INODE;	/* root dir */
@@ -137,7 +137,7 @@ void my_mkfs ()
 	imd->mtime = time(NULL);
 
 	put_block(er->node);
-	put_block(caches[3]);
+	put_block(fr->node);
 	put_block(caches[4]);
 	flush_all();
 	write_superblock(fs_info);	/* write superblock last */
