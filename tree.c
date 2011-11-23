@@ -208,7 +208,6 @@ PRIVATE int split_index_node(struct root *r, struct path *p, int level) {
 		p->slots[level + 1] = 0;	/* path on the left node */
 		insert_key_ptr(r, p, level + 1,
 						key_for(left, 0), left->write_blocknr);
-		r->node = c;				/* new root node */
 		r->blocknr = new_rootnr;
 	}
 	memmove(&right->u.node.u.key_ptrs[0],	/* move larger half to right node */

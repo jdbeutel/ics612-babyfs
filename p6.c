@@ -75,19 +75,16 @@ int my_rmdir (const char * path)
 void my_mkfs ()
 {
 	struct fs_info fs_info;
-	struct root *er = &fs_info.extent_root;
-	struct root *fr = &fs_info.fs_root;
-	struct cache *caches[5];
-	struct cache *sb;
+	struct cache *cache;
 	int devsize;
 
-	sb = get_block(SUPERBLOCK_NR);
-	if (!sb)	return;
-	if (sb->u.superblock.super_magic == SUPER_MAGIC) {
+	cache = get_block(SUPERBLOCK_NR);
+	if (!cache)	return;
+	if (cache->u.superblock.super_magic == SUPER_MAGIC) {
 		fprintf(stderr, "device already has this file system\n");
 		return;
 	}
-	put_block(sb);
+	put_block(cache);
 
 	devsize = dev_open();
 	if (devsize < 5) {
@@ -99,9 +96,10 @@ void my_mkfs ()
 	fs_info.alloc_block = mkfs_alloc_block;	/* for bootstrapping extent tree */
 
 	/* bootstrap root node of extent tree */
-	er->node = init_node(1, TYPE_EXT_IDX, 1);
-	er->blocknr = er->node->write_blocknr;
-	er->fs_info = &fs_info;
+	cache = init_node(1, TYPE_EXT_IDX, 1);
+	fs_info.extent_root.blocknr = cache->write_blocknr;
+	fs_info.extent_root.fs_info = &fs_info;
+	put_block(cache);
 
 	/* add extends via basic tree ops */
 	insert_extent(&fs_info, 0, TYPE_SUPERBLOCK, 1);
@@ -111,14 +109,13 @@ void my_mkfs ()
 	insert_extent(&fs_info, 4, TYPE_FS_LEAF, 1);
 
 	/* FS tree root node */
-	fr->node = init_node(3, TYPE_FS_IDX, 1);
-	fr->blocknr = fr->node->write_blocknr;
-	fr->fs_info = &fs_info;
+	cache = init_node(3, TYPE_FS_IDX, 1);
+	fs_info.fs_root.blocknr = cache->write_blocknr;
+	fs_info.fs_root.fs_info = &fs_info;	/* quite circular */
+	put_block(cache);
 
 	insert_inode(&fs_info, ROOT_DIR_INODE, INODE_DIR);
 
-	put_block(er->node);
-	put_block(fr->node);
 	flush_all();
 	write_superblock(fs_info);	/* write superblock last */
 }

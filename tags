@@ -49,7 +49,7 @@ add_to_mru	cache.c	/^PRIVATE void add_to_mru(struct cache *c) {$/;"	f
 alloc_block	babyfs.h	/^	blocknr_t (*alloc_block)(struct root *extent_root, blocknr_t nearby);$/;"	m	struct:fs_info
 any_dirty	cache.c	/^PRIVATE int any_dirty() {$/;"	f
 block	p6.h	/^typedef char block [BLOCKSIZE];$/;"	t
-blocknr	babyfs.h	/^	blocknr_t blocknr;	\/* for after node is put back *\/$/;"	m	struct:root
+blocknr	babyfs.h	/^	blocknr_t blocknr;	\/* even after cache is put back *\/$/;"	m	struct:root
 blocknr	babyfs.h	/^	blocknr_t blocknr;	\/* for testing and simple consistency check *\/$/;"	m	struct:header
 blocknr	babyfs.h	/^	blocknr_t blocknr;$/;"	m	struct:file_extent_metadata
 blocknr	babyfs.h	/^	blocknr_t blocknr;$/;"	m	struct:key_ptr
@@ -141,7 +141,6 @@ my_rmdir	p6.c	/^int my_rmdir (const char * path)$/;"	f
 my_write	p6.c	/^int my_write (int fd, const void * buf, int count)$/;"	f
 name	babyfs.h	/^	char name[1]; \/* variable-sized, \\0-terminated, up to 200 chars *\/$/;"	m	struct:dir_ent_metadata
 node	babyfs.h	/^		struct node node;$/;"	m	union:cache::u2	typeref:struct:cache::u2::node
-node	babyfs.h	/^	struct cache *node;$/;"	m	struct:root	typeref:struct:root::cache
 node	babyfs.h	/^struct node {$/;"	s
 nodes	babyfs.h	/^	struct cache *nodes[MAX_LEVEL];$/;"	m	struct:path	typeref:struct:path::cache
 nritems	babyfs.h	/^	uint8_t nritems;	\/* populated key or item slots *\/$/;"	m	struct:header

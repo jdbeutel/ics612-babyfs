@@ -144,8 +144,7 @@ struct cache {
 
 struct fs_info;
 struct root {
-	struct cache *node;
-	blocknr_t blocknr;	/* for after node is put back */
+	blocknr_t blocknr;	/* even after cache is put back */
 	struct fs_info *fs_info;
 };
 struct fs_info {
