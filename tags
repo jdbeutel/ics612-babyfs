@@ -101,6 +101,7 @@ inode_metadata	babyfs.h	/^struct inode_metadata {$/;"	s
 inode_type	babyfs.h	/^	uint32_t inode_type;$/;"	m	struct:inode_metadata
 insert_empty_item	tree.c	/^PUBLIC int insert_empty_item(struct root *r, struct key *key, struct path *p,$/;"	f
 insert_extent	tree.c	/^PUBLIC int insert_extent(struct root *r, uint32_t blocknr, uint16_t type,$/;"	f
+insert_inode	tree.c	/^PUBLIC int insert_inode(struct root *r, uint32_t inode, uint16_t inode_type) {$/;"	f
 insert_item_in_leaf	tree.c	/^PRIVATE int insert_item_in_leaf(struct root *r, struct path *p,$/;"	f
 insert_key_ptr	tree.c	/^PRIVATE void insert_key_ptr(struct root *r, struct path *p, int level,$/;"	f
 is_root_level	tree.c	/^PRIVATE int is_root_level(int level, struct path *p) {$/;"	f
@@ -122,6 +123,8 @@ lru	cache.c	/^static struct cache *lru;	\/* least-recently-used (free) list *\/$
 main	sample.c	/^     int main(int argc, char *argv[])$/;"	f
 main	test1.c	/^int main (int argc, char ** argv)$/;"	f
 main	testp6.c	/^int main (int argc, char ** argv)$/;"	f
+metadata_for	tree.c	/^PRIVATE void *metadata_for(struct path *p) {$/;"	f
+metadata_size_for	tree.c	/^PRIVATE int metadata_size_for(struct path *p) {$/;"	f
 mkfs_alloc_block	tree.c	/^PUBLIC blocknr_t mkfs_alloc_block(struct root *extent_root, blocknr_t nearby) {$/;"	f
 more_recently_used	babyfs.h	/^			*more_recently_used;$/;"	m	struct:cache	typeref:struct:cache::
 mru	cache.c	/^static struct cache *mru;	\/* most-recently-used; other end of the list *\/$/;"	v	typeref:struct:cache	file:

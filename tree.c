@@ -52,6 +52,22 @@ PRIVATE blocknr_t ptr_for(struct cache *node, int slot) {
 	return node->u.node.u.key_ptrs[slot].blocknr;
 }
 
+PRIVATE int metadata_size_for(struct path *p) {
+	struct node *leaf = &p->nodes[0]->u.node;
+	int slot = p->slots[0];
+	return leaf->u.items[slot].size;
+}
+
+PRIVATE void *metadata_for(struct path *p) {
+	struct node *leaf = &p->nodes[0]->u.node;
+	int slot = p->slots[0];
+	
+	if (!metadata_size_for(p)) {
+		return NULL;	/* no metadata */
+	}
+	return ((void *)leaf) + leaf->u.items[slot].offset;
+}
+
 PRIVATE int compare_keys(struct key *k1, struct key *k2) {
 	if (k1->objectid < k2->objectid) return -1;
 	if (k1->objectid > k2->objectid) return 1;
@@ -379,13 +395,36 @@ PUBLIC int insert_extent(struct root *r, uint32_t blocknr, uint16_t type,
 						uint32_t block_count) {
 	struct path p;
 	struct key key;
-	int ret, level = 0;
+	int ret;
 
 	key.objectid = blocknr;
 	key.type = type;
 	key.offset = block_count;
 	ret = insert_empty_item(r, &key, &p, sizeof(struct item));
 	if (ret) return ret;
+	/* no metadata for project 6 extents */
+	free_path(&p);
+	return SUCCESS;
+}
+
+PUBLIC int insert_inode(struct root *r, uint32_t inode, uint16_t inode_type) {
+	struct path p;
+	struct key key;
+	struct inode_metadata *imd; 
+	int ins_len = sizeof(struct item) + sizeof(*imd); 
+	int ret;
+
+	key.objectid = inode;
+	key.type = TYPE_INODE;
+	key.offset = INODE_KEY_OFFSET;
+	ret = insert_empty_item(r, &key, &p, ins_len);
+	if (ret) return ret;
+
+	imd = (struct inode_metadata *) metadata_for(&p);
+	imd->inode_type = inode_type;
+	imd->ctime = time(NULL);
+	imd->mtime = time(NULL);
+
 	free_path(&p);
 	return SUCCESS;
 }

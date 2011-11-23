@@ -79,9 +79,7 @@ void my_mkfs ()
 	struct root *fr = &fs_info.fs_root;
 	struct cache *caches[5];
 	struct cache *sb;
-	struct node *node;
-	struct inode_metadata *imd;
-	int devsize, i;
+	int devsize;
 
 	sb = get_block(SUPERBLOCK_NR);
 	if (!sb)	return;
@@ -100,45 +98,27 @@ void my_mkfs ()
 	fs_info.lower_bounds = MIN_LOWER_BOUNDS;	/* min for testing tree ops */
 	fs_info.alloc_block = mkfs_alloc_block;	/* for bootstrapping extent tree */
 
-	er->node = init_node(1, TYPE_EXT_IDX, 1);	/* root node */
+	/* bootstrap root node of extent tree */
+	er->node = init_node(1, TYPE_EXT_IDX, 1);
 	er->blocknr = er->node->write_blocknr;
 	er->fs_info = &fs_info;
 
-	/* todo: bootstrap root node and then add these via basic tree ops */
+	/* add extends via basic tree ops */
 	insert_extent(er, 0, TYPE_SUPERBLOCK, 1);
 	insert_extent(er, 1, TYPE_EXT_IDX, 1);
 	insert_extent(er, 2, TYPE_EXT_LEAF, 1);
 	insert_extent(er, 3, TYPE_FS_IDX, 1);
 	insert_extent(er, 4, TYPE_FS_LEAF, 1);
 
-	fr->node = init_node(3, TYPE_FS_IDX, 1);	/* root node */
+	/* FS tree root node */
+	fr->node = init_node(3, TYPE_FS_IDX, 1);
 	fr->blocknr = fr->node->write_blocknr;
 	fr->fs_info = &fs_info;
-	node = &fr->node->u.node;
-	node->header.nritems = 1;
 
-	node->u.key_ptrs[0].key.objectid = ROOT_DIR_INODE;	/* root dir */
-	node->u.key_ptrs[0].key.type = TYPE_INODE;
-	node->u.key_ptrs[0].key.offset = INODE_KEY_OFFSET;
-	node->u.key_ptrs[0].blocknr = 4;
-
-	caches[4] = init_node(4, TYPE_FS_LEAF, 0);
-	node = &caches[4]->u.node;
-	node->header.nritems = 1;
-
-	node->u.items[0].key.objectid = ROOT_DIR_INODE;
-	node->u.items[0].key.type = TYPE_INODE;
-	node->u.items[0].key.offset = INODE_KEY_OFFSET;
-	node->u.items[0].size = sizeof(*imd);
-	node->u.items[0].offset = BLOCKSIZE - node->u.items[0].size;
-	imd = (struct inode_metadata *) (((char *)node) + node->u.items[0].offset);
-	imd->inode_type = INODE_DIR;
-	imd->ctime = time(NULL);
-	imd->mtime = time(NULL);
+	insert_inode(fr, ROOT_DIR_INODE, INODE_DIR);
 
 	put_block(er->node);
 	put_block(fr->node);
-	put_block(caches[4]);
 	flush_all();
 	write_superblock(fs_info);	/* write superblock last */
 }
