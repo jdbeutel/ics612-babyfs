@@ -75,6 +75,7 @@ int my_rmdir (const char * path)
 void my_mkfs ()
 {
 	struct fs_info fs_info;
+	struct root *er = &fs_info.extent_root;
 	struct cache *caches[5];
 	struct cache *sb;
 	struct node *node;
@@ -98,17 +99,16 @@ void my_mkfs ()
 	fs_info.lower_bounds = MIN_LOWER_BOUNDS;	/* min for testing tree ops */
 	fs_info.alloc_block = mkfs_alloc_block;	/* for bootstrapping extent tree */
 
-	caches[1] = init_node(1, TYPE_EXT_IDX, 1);	/* root node */
-	fs_info.extent_root.node = caches[1];
-	fs_info.extent_root.blocknr = caches[1]->write_blocknr;
-	fs_info.extent_root.fs_info = &fs_info;
+	er->node = init_node(1, TYPE_EXT_IDX, 1);
+	er->blocknr = er->node->write_blocknr;
+	er->fs_info = &fs_info;
 
 	/* todo: bootstrap root node and then add these via basic tree ops */
-	insert_extent(&fs_info.extent_root, 0, TYPE_SUPERBLOCK, 1);
-	insert_extent(&fs_info.extent_root, 1, TYPE_EXT_IDX, 1);
-	insert_extent(&fs_info.extent_root, 2, TYPE_EXT_LEAF, 1);
-	insert_extent(&fs_info.extent_root, 3, TYPE_FS_IDX, 1);
-	insert_extent(&fs_info.extent_root, 4, TYPE_FS_LEAF, 1);
+	insert_extent(er, 0, TYPE_SUPERBLOCK, 1);
+	insert_extent(er, 1, TYPE_EXT_IDX, 1);
+	insert_extent(er, 2, TYPE_EXT_LEAF, 1);
+	insert_extent(er, 3, TYPE_FS_IDX, 1);
+	insert_extent(er, 4, TYPE_FS_LEAF, 1);
 
 	caches[3] = init_node(3, TYPE_FS_IDX, 1);	/* root node */
 	fs_info.fs_root.node = caches[3];
@@ -136,7 +136,7 @@ void my_mkfs ()
 	imd->ctime = time(NULL);
 	imd->mtime = time(NULL);
 
-	put_block(caches[1]);
+	put_block(er->node);
 	put_block(caches[3]);
 	put_block(caches[4]);
 	flush_all();
