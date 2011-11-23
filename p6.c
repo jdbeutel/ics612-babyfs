@@ -104,18 +104,18 @@ void my_mkfs ()
 	er->fs_info = &fs_info;
 
 	/* add extends via basic tree ops */
-	insert_extent(er, 0, TYPE_SUPERBLOCK, 1);
-	insert_extent(er, 1, TYPE_EXT_IDX, 1);
-	insert_extent(er, 2, TYPE_EXT_LEAF, 1);
-	insert_extent(er, 3, TYPE_FS_IDX, 1);
-	insert_extent(er, 4, TYPE_FS_LEAF, 1);
+	insert_extent(&fs_info, 0, TYPE_SUPERBLOCK, 1);
+	insert_extent(&fs_info, 1, TYPE_EXT_IDX, 1);
+	insert_extent(&fs_info, 2, TYPE_EXT_LEAF, 1);
+	insert_extent(&fs_info, 3, TYPE_FS_IDX, 1);
+	insert_extent(&fs_info, 4, TYPE_FS_LEAF, 1);
 
 	/* FS tree root node */
 	fr->node = init_node(3, TYPE_FS_IDX, 1);
 	fr->blocknr = fr->node->write_blocknr;
 	fr->fs_info = &fs_info;
 
-	insert_inode(fr, ROOT_DIR_INODE, INODE_DIR);
+	insert_inode(&fs_info, ROOT_DIR_INODE, INODE_DIR);
 
 	put_block(er->node);
 	put_block(fr->node);
