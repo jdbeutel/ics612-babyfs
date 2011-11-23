@@ -7,7 +7,7 @@ rm -f simulated_device test1.od-X test1.od-c
 dd if=/dev/zero of=simulated_device bs=1024 count=99
 99+0 records in
 99+0 records out
-101376 bytes (101 kB) copied, 0.000961637 s, 105 MB/s
+101376 bytes (101 kB) copied, 0.000762173 s, 133 MB/s
 ./test1 2>&1 | tee test1.out
 debug: init_node 1 e1 1
 debug: mkfs_alloc_block 2
@@ -19,17 +19,17 @@ od -Ax -c simulated_device > test1.od-c
 od -Ax -X simulated_device > test1.od-X
 git diff test1.od-X
 diff --git a/test1.od-X b/test1.od-X
-index 5765d69..d64ed7f 100644
+index d64ed7f..9d27c0c 100644
 --- a/test1.od-X
 +++ b/test1.od-X
 @@ -22,8 +22,8 @@
  001010 00000000 000000f0 00000000 002003e0
  001020 00000000 00000000 00000000 00000000
  *
--0013e0 000000d1 00000000 4eccaea9 00000000
--0013f0 00000000 00000000 4eccaea9 00000000
-+0013e0 000000d1 00000000 4eccb0f3 00000000
-+0013f0 00000000 00000000 4eccb0f3 00000000
+-0013e0 000000d1 00000000 4eccb0f3 00000000
+-0013f0 00000000 00000000 4eccb0f3 00000000
++0013e0 000000d1 00000000 4eccc284 00000000
++0013f0 00000000 00000000 4eccc284 00000000
  001400 00000000 00000000 00000000 00000000
  *
  018c00

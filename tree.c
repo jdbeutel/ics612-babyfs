@@ -20,8 +20,83 @@ PUBLIC struct cache *init_node( blocknr_t blocknr,
 	return c;
 }
 
-PUBLIC blocknr_t mkfs_alloc_block(struct root *extent_root, blocknr_t nearby) {
+PUBLIC blocknr_t mkfs_alloc_block(struct root *ext_rt, blocknr_t nearby) {
 	printf("debug: mkfs_alloc_block %d\n", nearby + 1);
+	return nearby + 1;	/* just while making the extent tree */
+}
+
+PRIVATE int is_root_level(int level, struct path *p);
+
+/* advances the slot of the path to the next item */
+PRIVATE int step_path_slot(struct path *p) {
+	struct header *hdr;
+	int level = 0;
+	int slot;
+	while (TRUE) {
+		hdr = &p->nodes[level]->u.node.header; 
+		slot = ++(p->slots[level]);
+		if (slot < hdr->nritems) {
+			return 0;	/* on the next slot */
+		} else {
+			if(is_root_level(level, p)) {
+				return 1;	/* no next item */
+			} else {	/* ran out at this level; try next in parent */
+				/* todo: put_block() current node and recursively see if
+				 * the parent has a next slot; if so, get_block its
+				 * descendents' 0 slots down to the leaf.
+				 */
+			}
+		}
+	}
+}
+
+PRIVATE struct key *key_for(struct cache *node, int slot);
+
+/* finds an unallocated key hole large enough to hold block_count */
+PRIVATE blocknr_t find_free_extent(struct root *ext_rt, blocknr_t nearby,
+									uint32_t block_count) {
+	struct key first;
+	struct key *prev;
+	struct key *next;
+	struct path p;
+	blocknr_t after_prev;
+	uint32_t free_blocks;
+	int ret;
+
+	first.objectid = 0;		/* todo: start from nearby? */
+	first.type = 0;
+	first.offset = 0;
+	ret = search_slot(ext_rt, &first, &p, 0);
+	if (ret < 0) return ret;
+	prev = key_for(p.nodes[0], p.slots[0]);
+	while (TRUE) {
+		after_prev = prev->objectid + prev->offset;
+		ret = step_path_slot(&p);
+		if (ret < 0) return ret;
+		if (ret > 0) {	/* no more items */
+			free_blocks = ext_rt->fs_info->total_blocks - after_prev;
+			if (free_blocks >= block_count) {
+				return after_prev;
+			} else {
+				return -ENOSPC;
+			}
+		}
+		next = key_for(p.nodes[0], p.slots[0]);
+		free_blocks = next->objectid - after_prev;
+		if (free_blocks >= block_count) {
+			return after_prev;
+		}
+		prev = next;
+	}
+}
+
+PUBLIC blocknr_t normal_alloc_block(struct root *ext_rt, blocknr_t nearby) {
+	printf("debug: normal_alloc_block %d\n", nearby + 1);
+	/* todo:
+	 * b = find_free_extent(ext_rt, nearby, 1);
+	 * insert_extent(struct fs_info *fsi, b, uint16_t type, 1);
+	 * return b;
+	 */ 
 	return nearby + 1;	/* just while making the extent tree */
 }
 

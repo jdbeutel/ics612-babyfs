@@ -101,7 +101,7 @@ void my_mkfs ()
 	fs_info.extent_root.fs_info = &fs_info;
 	put_block(cache);
 
-	/* add extends via basic tree ops */
+	/* add extents via basic tree ops */
 	insert_extent(&fs_info, 0, TYPE_SUPERBLOCK, 1);
 	insert_extent(&fs_info, 1, TYPE_EXT_IDX, 1);
 	insert_extent(&fs_info, 2, TYPE_EXT_LEAF, 1);
