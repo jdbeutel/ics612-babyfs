@@ -74,22 +74,21 @@ int my_rmdir (const char * path)
  * and if not, creates one. */
 void my_mkfs ()
 {
-	block super_block;
 	struct fs_info fs_info;
 	struct cache *caches[5];
-	struct superblock *sb;
+	struct cache *sb;
 	struct node *node;
 	struct inode_metadata *imd;
 	int devsize, i;
 
-	caches[0] = get_block(SUPERBLOCK_NR);
-	if (!caches[0])	return;
-
-	sb = &caches[0]->u.superblock;
-	if (sb->super_magic == SUPER_MAGIC) {
+	sb = get_block(SUPERBLOCK_NR);
+	if (!sb)	return;
+	if (sb->u.superblock.super_magic == SUPER_MAGIC) {
 		fprintf(stderr, "device already has this file system\n");
 		return;
 	}
+	put_block(sb);
+
 	devsize = dev_open();
 	if (devsize < 5) {
 		fprintf(stderr, "device too small (%d blocks)\n", devsize);
@@ -103,7 +102,6 @@ void my_mkfs ()
 	fs_info.extent_root.node = caches[1];
 	fs_info.extent_root.blocknr = caches[1]->write_blocknr;
 	fs_info.extent_root.fs_info = &fs_info;
-	node = &caches[1]->u.node;
 
 	/* todo: bootstrap root node and then add these via basic tree ops */
 	insert_extent(&fs_info.extent_root, 0, TYPE_SUPERBLOCK, 1);
@@ -142,8 +140,7 @@ void my_mkfs ()
 	put_block(caches[3]);
 	put_block(caches[4]);
 	flush_all();
-	put_block(caches[0]);
 	write_superblock(fs_info);	/* write superblock last */
 }
 
-/* vim: set ts=4 sw=4: */
+/* vim: set ts=4 sw=4 tags=tags: */

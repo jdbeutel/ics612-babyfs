@@ -1,8 +1,19 @@
 DEPS = babyfs.h p6.h cache.h
 OBJ = block.o cache.o p6.o tree.o
+TESTS = testp6 test1
 
-%.o: %.c $(DEPS)
-	cc -c -o $@ $<
+clean:
+	rm -f $(OBJ) $(TESTS)
+
+tags: *.[ch]
+	ctags *.[ch]
+
+# GNU make ignores this rule when it has dependencies,
+# so I'll brute-force it with clean.
+#%.o: %.c $(DEPS)
+#%.o: %.c babyfs.h p6.h cache.h
+%.o: %.c
+	cc -c -g -o $@ $<
 
 runtest%: test%
 	rm -f simulated_device $<.od-X $<.od-c
@@ -15,4 +26,4 @@ runtest%: test%
 .SECONDEXPANSION:
 
 testp6 test1: $$@.o $(OBJ)
-	cc -o $@ $^
+	cc -g -o $@ $^

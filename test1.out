@@ -1,1 +1,5 @@
-test1: cache.c:167: init_block: Assertion `!c->users' failed.
+debug: init_node 1 e1 1
+debug: mkfs_alloc_block 2
+debug: init_node 2 e2 0
+debug: init_node 3 e3 1
+debug: init_node 4 e4 0

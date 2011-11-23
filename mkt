@@ -1,2 +1,4 @@
 #!/bin/sh
+make clean
+make tags
 make runtest$1 2>&1 | tee make.out

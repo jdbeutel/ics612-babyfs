@@ -1,6 +1,7 @@
 /* ICS612 proj6 jbeutel 2011-11-15 */
 /* device block caching and shadowing */
 
+#include <stdio.h>	/* printf() */
 #include <assert.h>	/* assert() */
 #include <string.h>	/* memset() */
 #include <errno.h>	/* ENOBUFS */
@@ -130,8 +131,10 @@ PUBLIC struct cache *get_block(blocknr_t blocknr) {
 	assert(dev_open() > blocknr);
 	c = find_cache_for(blocknr);
 	if (c) {
-		if (!c->users) {
+		if (!c->users && !c->will_write) {
 			remove_from_lru(c);		/* will be used now */
+		} else {
+			assert(!c->less_recently_used && !c->more_recently_used);
 		}
 	} else {	/* get a free cache and read the block from the device */
 		if (!lru) {
@@ -239,6 +242,11 @@ PRIVATE int any_dirty() {
 
 	for (i = 0; i < CACHE_COUNT; i++) {
 		if (caches[i].will_write) {
+			struct cache *c = &caches[i];
+			printf("debug: any_dirty: cache %d will_write %d "
+					"(users: %d, was_read: %d, read_blocknr: %d)\n",
+					i, c->write_blocknr, 
+					c->users, c->was_read, c->read_blocknr);
 			return TRUE;
 		}
 	}
@@ -263,4 +271,4 @@ PUBLIC int write_superblock(struct fs_info fs_info) {
 	return flush_all();
 }
 
-/* vim: set ts=4 sw=4: */
+/* vim: set ts=4 sw=4 tags=tags: */
