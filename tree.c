@@ -318,7 +318,10 @@ PUBLIC int search_slot(struct root *r, struct key *key, struct path *p,
 			}
 			assert(hdr->nritems);	/* an empty leaf would not be preserved */
 			/* so there is an item to compare with */
-			comparison = compare_keys(key_for(node, p->slots[level]), key);
+			comparison = compare_keys(key_for(node, p->slots[0]), key);
+			if (comparison < 0) {
+				p->slots[0]++;	/* would insert at next slot in leaf */
+			}
 			return comparison ? KEY_NOT_FOUND : KEY_FOUND;
 
 		/* index node */
@@ -359,7 +362,17 @@ PUBLIC int insert_empty_item(struct root *r, struct key *key, struct path *p,
 	ret = search_slot(r, key, p, ins_len);
 	if (ret == KEY_FOUND) return -EEXIST;
 	if (ret != KEY_NOT_FOUND) return ret;
-	return  insert_item_in_leaf(r, p, key, ins_len);
+	return insert_item_in_leaf(r, p, key, ins_len);
+}
+
+/* puts the nodes on the path back to the cache.
+ * It's up to the owner of the path to call this.
+ */
+PUBLIC void free_path(struct path *p) {
+	int level = 0;
+	do {
+		put_block(p->nodes[level]);
+	} while(!is_root_level(level++, p));
 }
 
 PUBLIC int insert_extent(struct root *r, uint32_t blocknr, uint16_t type,
@@ -373,9 +386,8 @@ PUBLIC int insert_extent(struct root *r, uint32_t blocknr, uint16_t type,
 	key.offset = block_count;
 	ret = insert_empty_item(r, &key, &p, sizeof(struct item));
 	if (ret) return ret;
-	do {
-		put_block(p.nodes[level]);
-	} while(!is_root_level(level++, &p));
+	free_path(&p);
+	return SUCCESS;
 }
 
 /* vim: set ts=4 sw=4 tags=tags: */

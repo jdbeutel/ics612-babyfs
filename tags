@@ -84,6 +84,7 @@ filler2	babyfs.h	/^	uint64_t filler2;	\/* lines up times in hex dump for compari
 find_cache_for	cache.c	/^PRIVATE struct cache *find_cache_for(blocknr_t n) {$/;"	f
 fix_index_node	tree.c	/^PRIVATE int fix_index_node(struct root *r, struct path *p, int level) {$/;"	f
 flush_all	cache.c	/^PUBLIC int flush_all() {$/;"	f
+free_path	tree.c	/^PUBLIC void free_path(struct path *p) {$/;"	f
 fs_info	babyfs.h	/^	struct fs_info *fs_info;$/;"	m	struct:root	typeref:struct:root::fs_info
 fs_info	babyfs.h	/^struct fs_info {$/;"	s
 fs_root	babyfs.h	/^	struct root fs_root;$/;"	m	struct:fs_info	typeref:struct:fs_info::root
