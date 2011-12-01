@@ -26,27 +26,44 @@ PUBLIC blocknr_t mkfs_alloc_block(struct root *ext_rt, blocknr_t nearby) {
 }
 
 PRIVATE int is_root_level(int level, struct path *p);
+PRIVATE blocknr_t ptr_for(struct cache *node, int slot);
 
-/* advances the slot of the path to the next item */
-PRIVATE int step_path_slot(struct path *p) {
+/* advances the slot of the path to the next item
+ * (walking the tree and freeing the path as necessary).
+ * returns 0 for success, 1 if no next item (and frees path), or negative errno
+ */
+PRIVATE int step_to_next_slot(struct path *p) {
+	struct cache *node;
 	struct header *hdr;
-	int level = 0;
+	blocknr_t b;
 	int slot;
+	int level = 0;	/* starting at leaf */
 	while (TRUE) {
-		hdr = &p->nodes[level]->u.node.header; 
-		slot = ++(p->slots[level]);
-		if (slot < hdr->nritems) {
-			return 0;	/* on the next slot */
-		} else {
-			if(is_root_level(level, p)) {
-				return 1;	/* no next item */
-			} else {	/* ran out at this level; try next in parent */
-				/* todo: put_block() current node and recursively see if
-				 * the parent has a next slot; if so, get_block its
-				 * descendents' 0 slots down to the leaf.
-				 */
+		node = p->nodes[level];
+		hdr = &node->u.node.header; 
+		slot = ++(p->slots[level]);	/* advance the slot */
+		if (slot < hdr->nritems) {	/* found the next slot */
+			while (level) {			/* go back down to the leaf */
+				b = ptr_for(node, slot);
+				node = get_block(b);
+				if (!node) {
+					return -errno;
+				}
+				p->nodes[--level] = node;
+				slot = 0; /* get the 0 slot all the way down to the leaf */
+				hdr = &node->u.node.header; 
+				assert(slot < hdr->nritems);
 			}
+			return 0;	/* on the next slot */
 		}
+		assert(slot >= hdr->nritems);	/* node is out of slots, */
+		p->nodes[level] = NULL;		/* so take it off the path */
+		put_block(node);			/* and free it from the path */
+		p->slots[level] = 0;		/* this level will use the first slot */
+		if(is_root_level(level, p)) {	/* can't go any higher */
+			return 1;	/* there is no next item */
+		}
+		level++; 					/* look at next level up */
 	}
 }
 
@@ -67,27 +84,30 @@ PRIVATE blocknr_t find_free_extent(struct root *ext_rt, blocknr_t nearby,
 	first.type = 0;
 	first.offset = 0;
 	ret = search_slot(ext_rt, &first, &p, 0);
-	if (ret < 0) return ret;
+	if (ret < 0) return ret;	/* todo: use a signed type for return value? */
 	prev = key_for(p.nodes[0], p.slots[0]);
 	while (TRUE) {
 		after_prev = prev->objectid + prev->offset;
-		ret = step_path_slot(&p);
+		ret = step_to_next_slot(&p);
 		if (ret < 0) return ret;
 		if (ret > 0) {	/* no more items */
 			free_blocks = ext_rt->fs_info->total_blocks - after_prev;
 			if (free_blocks >= block_count) {
-				return after_prev;
+				break;
 			} else {
-				return -ENOSPC;
+				after_prev = -ENOSPC;
+				break;
 			}
 		}
 		next = key_for(p.nodes[0], p.slots[0]);
 		free_blocks = next->objectid - after_prev;
 		if (free_blocks >= block_count) {
-			return after_prev;
+			break;
 		}
 		prev = next;
 	}
+	free_path(&p);
+	return after_prev;
 }
 
 PUBLIC blocknr_t normal_alloc_block(struct root *ext_rt, blocknr_t nearby) {

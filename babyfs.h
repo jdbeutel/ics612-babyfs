@@ -177,3 +177,4 @@ extern int insert_extent(struct fs_info *fsi, uint32_t blocknr, uint16_t type,
 						uint32_t block_count);
 extern int insert_inode(struct fs_info *fsi, uint32_t inode,
 			uint16_t inode_type);
+extern void free_path(struct path *p);
