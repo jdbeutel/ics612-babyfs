@@ -160,15 +160,7 @@ DATA STRUCTURES
 NOTES
 -----
 
-The extent tree doesn't really need to have leaf nodes with items,
-like the FS tree does, because Babyfs doesn't have reference counts
-or back-references.  For that same reason, the extents do not need
-to be per-file and per-tree-node, but they will be, nevertheless.
-The extent tree will have the same structure as the FS tree,
-to reuse code, and for consistency with Btrfs, in anticipation of
-support for copy-on-write.
-
-However, when the FS tree or a file allocate blocks in the extent tree,
+When the FS tree or a file allocate blocks in the extent tree,
 it may trigger a cascade, if the extent tree needs to then allocate
 more blocks for itself.  I will try to avoid a Catch-22 here by
 buffering all the changed blocks in memory, letting them change
