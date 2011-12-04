@@ -47,7 +47,7 @@ TYPE_SUPERBLOCK	babyfs.h	22;"	d
 UPPER_BOUNDS	babyfs.h	100;"	d
 add_to_mru	cache.c	/^PRIVATE void add_to_mru(struct cache *c) {$/;"	f
 alloc_block	babyfs.h	/^	blocknr_t (*alloc_block)(struct root *extent_root, blocknr_t nearby,$/;"	m	struct:fs_info
-alloc_block	tree.c	/^PUBLIC blocknr_t alloc_block(struct fs_info *fs_info, struct cache *nearby,$/;"	f
+alloc_block	extent.c	/^PUBLIC blocknr_t alloc_block(struct fs_info *fs_info, struct cache *nearby,$/;"	f
 any_dirty	cache.c	/^PRIVATE int any_dirty() {$/;"	f
 block	p6.h	/^typedef char block [BLOCKSIZE];$/;"	t
 blocknr	babyfs.h	/^	blocknr_t blocknr;	\/* even after cache is put back *\/$/;"	m	struct:root
@@ -82,7 +82,7 @@ filler1	babyfs.h	/^	uint8_t filler1;	\/* round up to 16 bytes for neat hex dumps
 filler2	babyfs.h	/^	uint16_t filler2;	\/* round up to 16 bytes for neat hex dumps *\/$/;"	m	struct:header
 filler2	babyfs.h	/^	uint64_t filler2;	\/* lines up times in hex dump for comparison *\/$/;"	m	struct:inode_metadata
 find_cache_for	cache.c	/^PRIVATE struct cache *find_cache_for(blocknr_t n) {$/;"	f
-find_free_extent	tree.c	/^PRIVATE blocknr_t find_free_extent(struct root *ext_rt, blocknr_t nearby,$/;"	f
+find_free_extent	extent.c	/^PRIVATE blocknr_t find_free_extent(struct root *ext_rt, blocknr_t nearby,$/;"	f
 fix_index_node	tree.c	/^PRIVATE int fix_index_node(struct root *r, struct path *p, int level) {$/;"	f
 flush_all	cache.c	/^PUBLIC int flush_all() {$/;"	f
 free_path	tree.c	/^PUBLIC void free_path(struct path *p) {$/;"	f
@@ -101,8 +101,8 @@ inode	babyfs.h	/^	uint32_t inode;$/;"	m	struct:dir_ent_metadata
 inode_metadata	babyfs.h	/^struct inode_metadata {$/;"	s
 inode_type	babyfs.h	/^	uint32_t inode_type;$/;"	m	struct:inode_metadata
 insert_empty_item	tree.c	/^PUBLIC int insert_empty_item(struct root *r, struct key *key, struct path *p,$/;"	f
-insert_extent	tree.c	/^PUBLIC int insert_extent(struct root *ext_rt, uint32_t blocknr, uint16_t type,$/;"	f
-insert_inode	tree.c	/^PUBLIC int insert_inode(struct fs_info *fsi, uint32_t inode,$/;"	f
+insert_extent	extent.c	/^PUBLIC int insert_extent(struct root *ext_rt, uint32_t blocknr, uint16_t type,$/;"	f
+insert_inode	fs.c	/^PUBLIC int insert_inode(struct fs_info *fsi, uint32_t inode,$/;"	f
 insert_item_in_leaf	tree.c	/^PRIVATE int insert_item_in_leaf(struct root *r, struct path *p,$/;"	f
 insert_key_ptr	tree.c	/^PRIVATE void insert_key_ptr(struct root *r, struct path *p, int level,$/;"	f
 is_root_level	tree.c	/^PRIVATE int is_root_level(int level, struct path *p) {$/;"	f
@@ -113,7 +113,7 @@ items	babyfs.h	/^		struct item	items[MAX_ITEMS];	\/* in leaf nodes *\/$/;"	m	uni
 key	babyfs.h	/^	struct key key;$/;"	m	struct:item	typeref:struct:item::key
 key	babyfs.h	/^	struct key key;$/;"	m	struct:key_ptr	typeref:struct:key_ptr::key
 key	babyfs.h	/^struct key {		\/* in index and leaf nodes *\/$/;"	s
-key_for	tree.c	/^PRIVATE struct key *key_for(struct cache *node, int slot) {$/;"	f
+key_for	tree.c	/^PUBLIC struct key *key_for(struct cache *node, int slot) {$/;"	f
 key_ptr	babyfs.h	/^struct key_ptr {		\/* in index nodes *\/$/;"	s
 key_ptrs	babyfs.h	/^		struct key_ptr	key_ptrs[MAX_KEY_PTRS];	\/* in index nodes *\/$/;"	m	union:node::u	typeref:struct:node::u::key_ptr
 less_recently_used	babyfs.h	/^	struct cache	*less_recently_used,$/;"	m	struct:cache	typeref:struct:cache::cache
@@ -124,9 +124,9 @@ lru	cache.c	/^static struct cache *lru;	\/* least-recently-used (free) list *\/$
 main	sample.c	/^     int main(int argc, char *argv[])$/;"	f
 main	test1.c	/^int main (int argc, char ** argv)$/;"	f
 main	testp6.c	/^int main (int argc, char ** argv)$/;"	f
-metadata_for	tree.c	/^PRIVATE void *metadata_for(struct path *p) {$/;"	f
+metadata_for	tree.c	/^PUBLIC void *metadata_for(struct path *p) {$/;"	f
 metadata_size_for	tree.c	/^PRIVATE int metadata_size_for(struct path *p) {$/;"	f
-mkfs_alloc_block	tree.c	/^PUBLIC blocknr_t mkfs_alloc_block(struct root *ext_rt, blocknr_t nearby,$/;"	f
+mkfs_alloc_block	extent.c	/^PUBLIC blocknr_t mkfs_alloc_block(struct root *ext_rt, blocknr_t nearby,$/;"	f
 more_recently_used	babyfs.h	/^			*more_recently_used;$/;"	m	struct:cache	typeref:struct:cache::
 mru	cache.c	/^static struct cache *mru;	\/* most-recently-used; other end of the list *\/$/;"	v	typeref:struct:cache	file:
 mtime	babyfs.h	/^	time_t mtime;		\/* 64 bits on my x86_64 *\/$/;"	m	struct:inode_metadata
@@ -144,7 +144,7 @@ name	babyfs.h	/^	char name[1]; \/* variable-sized, \\0-terminated, up to 200 cha
 node	babyfs.h	/^		struct node node;$/;"	m	union:cache::u2	typeref:struct:cache::u2::node
 node	babyfs.h	/^struct node {$/;"	s
 nodes	babyfs.h	/^	struct cache *nodes[MAX_LEVEL];$/;"	m	struct:path	typeref:struct:path::cache
-normal_alloc_block	tree.c	/^PUBLIC blocknr_t normal_alloc_block(struct root *ext_rt, blocknr_t nearby,$/;"	f
+normal_alloc_block	extent.c	/^PUBLIC blocknr_t normal_alloc_block(struct root *ext_rt, blocknr_t nearby,$/;"	f
 nritems	babyfs.h	/^	uint8_t nritems;	\/* populated key or item slots *\/$/;"	m	struct:header
 objectid	babyfs.h	/^	uint32_t objectid;	\/* inode or blocknr *\/$/;"	m	struct:key
 offset	babyfs.h	/^	item_offset_t offset;	\/* of metadata, in bytes from start of block *\/$/;"	m	struct:item
@@ -163,7 +163,7 @@ size	babyfs.h	/^	item_size_t size;	\/* of metadata, in bytes *\/$/;"	m	struct:it
 size	babyfs.h	/^	uint32_t size;	\/* in bytes *\/$/;"	m	struct:file_extent_metadata
 slots	babyfs.h	/^	int slots[MAX_LEVEL];$/;"	m	struct:path
 split_index_node	tree.c	/^PRIVATE int split_index_node(struct root *r, struct path *p, int level) {$/;"	f
-step_to_next_slot	tree.c	/^PRIVATE int step_to_next_slot(struct path *p) {$/;"	f
+step_to_next_slot	tree.c	/^PUBLIC int step_to_next_slot(struct path *p) {$/;"	f
 super_magic	babyfs.h	/^	uint32_t super_magic;	\/* magic number protects from my_mkfs() *\/$/;"	m	struct:superblock
 superblock	babyfs.h	/^		struct superblock superblock;$/;"	m	union:cache::u2	typeref:struct:cache::u2::superblock
 superblock	babyfs.h	/^struct superblock {	\/* first block of device *\/$/;"	s

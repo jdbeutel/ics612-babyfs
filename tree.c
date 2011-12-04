@@ -20,14 +20,62 @@ PUBLIC struct cache *init_node( blocknr_t blocknr,
 	return c;
 }
 
-PRIVATE int is_root_level(int level, struct path *p);
-PRIVATE blocknr_t ptr_for(struct cache *node, int slot);
+
+PRIVATE int is_root_level(int level, struct path *p) {
+	return level == MAX_LEVEL - 1 || !p->nodes[level + 1];
+}
+
+PUBLIC struct key *key_for(struct cache *node, int slot) {
+	assert(slot < node->u.node.header.nritems);
+	if (INDEX_TYPE(node->u.node.header.type)) {
+		return &node->u.node.u.key_ptrs[slot].key;
+	} else if (LEAF_TYPE(node->u.node.header.type)) {
+		return &node->u.node.u.items[slot].key;
+	} else {
+		assert(FALSE);
+	}
+}
+
+PRIVATE blocknr_t ptr_for(struct cache *node, int slot) {
+	assert(slot < node->u.node.header.nritems);
+	assert(INDEX_TYPE(node->u.node.header.type));
+	return node->u.node.u.key_ptrs[slot].blocknr;
+}
+
+PRIVATE int metadata_size_for(struct path *p) {
+	struct node *leaf = &p->nodes[0]->u.node;
+	int slot = p->slots[0];
+	return leaf->u.items[slot].size;
+}
+
+PUBLIC void *metadata_for(struct path *p) {
+	struct node *leaf = &p->nodes[0]->u.node;
+	int slot = p->slots[0];
+	
+	if (!metadata_size_for(p)) {
+		return NULL;	/* no metadata */
+	}
+	return ((void *)leaf) + leaf->u.items[slot].offset;
+}
+
+PRIVATE int compare_keys(struct key *k1, struct key *k2) {
+	if (k1->objectid < k2->objectid) return -1;
+	if (k1->objectid > k2->objectid) return 1;
+	assert(k1->objectid == k2->objectid);
+	if (k1->type < k2->type) return -1;
+	if (k1->type > k2->type) return 1;
+	assert(k1->type == k2->type);
+	if (k1->offset < k2->offset) return -1;
+	if (k1->offset > k2->offset) return 1;
+	assert(k1->offset == k2->offset);
+	return 0;
+}
 
 /* advances the slot of the path to the next item
  * (walking the tree and freeing the path as necessary).
  * returns 0 for success, 1 if no next item (and frees path), or negative errno
  */
-PRIVATE int step_to_next_slot(struct path *p) {
+PUBLIC int step_to_next_slot(struct path *p) {
 	struct cache *node;
 	struct header *hdr;
 	blocknr_t b;
@@ -60,123 +108,6 @@ PRIVATE int step_to_next_slot(struct path *p) {
 		}
 		level++; 					/* look at next level up */
 	}
-}
-
-PRIVATE struct key *key_for(struct cache *node, int slot);
-
-/* finds an unallocated key hole large enough to hold block_count */
-PRIVATE blocknr_t find_free_extent(struct root *ext_rt, blocknr_t nearby,
-									uint32_t block_count) {
-	struct key first;
-	struct key *key;
-	struct path p;
-	blocknr_t block_after_extent;
-	int32_t free_blocks;	/* may be negative for overlapping extents */
-	int ret;
-
-	first.objectid = 0;		/* todo: start from nearby? */
-	first.type = 0;
-	first.offset = 0;
-	ret = search_slot(ext_rt, &first, &p, 0);
-	if (ret < 0) return ret;	/* todo: use a signed type for return value? */
-	key = key_for(p.nodes[0], p.slots[0]);
-	while (TRUE) {
-		block_after_extent = key->objectid + key->offset;
-		ret = step_to_next_slot(&p);
-		if (ret < 0) return ret;
-		if (ret > 0) {	/* no more items */
-			free_blocks = ext_rt->fs_info->total_blocks - block_after_extent;
-			if (free_blocks >= block_count) {
-				break;
-			} else {
-				block_after_extent = -ENOSPC;
-				break;
-			}
-		}
-		key = key_for(p.nodes[0], p.slots[0]);
-		free_blocks = key->objectid - block_after_extent;
-		if (free_blocks >= block_count) {
-			break;
-		}
-	}
-	if (ret == 0) {		/* then the next slot is on the path */
-		free_path(&p);
-	}
-	return block_after_extent;
-}
-
-PUBLIC blocknr_t mkfs_alloc_block(struct root *ext_rt, blocknr_t nearby,
-									uint16_t type) {
-	printf("debug: mkfs_alloc_block %d\n", nearby + 1);
-	return nearby + 1;	/* just while making the extent tree */
-}
-
-PUBLIC blocknr_t normal_alloc_block(struct root *ext_rt, blocknr_t nearby,
-									uint16_t type) {
-	uint32_t block_count = 1;
-	blocknr_t b;
-
-	printf("debug: normal_alloc_block near %d\n", nearby + 1);
-	b = find_free_extent(ext_rt, nearby, block_count);
-	insert_extent(ext_rt, b, type, block_count);
-	return b;
-}
-
-PUBLIC blocknr_t alloc_block(struct fs_info *fs_info, struct cache *nearby,
-							uint16_t type) {
-	blocknr_t hint = nearby->will_write ? nearby->write_blocknr
-						: nearby->was_read ? nearby->read_blocknr : 0;
-	return fs_info->alloc_block(&fs_info->extent_root, hint, type);
-}
-
-PRIVATE int is_root_level(int level, struct path *p) {
-	return level == MAX_LEVEL - 1 || !p->nodes[level + 1];
-}
-
-PRIVATE struct key *key_for(struct cache *node, int slot) {
-	assert(slot < node->u.node.header.nritems);
-	if (INDEX_TYPE(node->u.node.header.type)) {
-		return &node->u.node.u.key_ptrs[slot].key;
-	} else if (LEAF_TYPE(node->u.node.header.type)) {
-		return &node->u.node.u.items[slot].key;
-	} else {
-		assert(FALSE);
-	}
-}
-
-PRIVATE blocknr_t ptr_for(struct cache *node, int slot) {
-	assert(slot < node->u.node.header.nritems);
-	assert(INDEX_TYPE(node->u.node.header.type));
-	return node->u.node.u.key_ptrs[slot].blocknr;
-}
-
-PRIVATE int metadata_size_for(struct path *p) {
-	struct node *leaf = &p->nodes[0]->u.node;
-	int slot = p->slots[0];
-	return leaf->u.items[slot].size;
-}
-
-PRIVATE void *metadata_for(struct path *p) {
-	struct node *leaf = &p->nodes[0]->u.node;
-	int slot = p->slots[0];
-	
-	if (!metadata_size_for(p)) {
-		return NULL;	/* no metadata */
-	}
-	return ((void *)leaf) + leaf->u.items[slot].offset;
-}
-
-PRIVATE int compare_keys(struct key *k1, struct key *k2) {
-	if (k1->objectid < k2->objectid) return -1;
-	if (k1->objectid > k2->objectid) return 1;
-	assert(k1->objectid == k2->objectid);
-	if (k1->type < k2->type) return -1;
-	if (k1->type > k2->type) return 1;
-	assert(k1->type == k2->type);
-	if (k1->offset < k2->offset) return -1;
-	if (k1->offset > k2->offset) return 1;
-	assert(k1->offset == k2->offset);
-	return 0;
 }
 
 /* shadows the node at the given level of the given path (up to the root),
@@ -487,45 +418,6 @@ PUBLIC void free_path(struct path *p) {
 	do {
 		put_block(p->nodes[level]);
 	} while(!is_root_level(level++, p));
-}
-
-PUBLIC int insert_extent(struct root *ext_rt, uint32_t blocknr, uint16_t type,
-						uint32_t block_count) {
-	struct path p;
-	struct key key;
-	int ret;
-
-	key.objectid = blocknr;
-	key.type = type;
-	key.offset = block_count;
-	ret = insert_empty_item(ext_rt, &key, &p, sizeof(struct item));
-	if (ret) return ret;
-	/* no metadata for project 6 extents */
-	free_path(&p);
-	return SUCCESS;
-}
-
-PUBLIC int insert_inode(struct fs_info *fsi, uint32_t inode,
-						uint16_t inode_type) {
-	struct path p;
-	struct key key;
-	struct inode_metadata *imd; 
-	int ins_len = sizeof(struct item) + sizeof(*imd); 
-	int ret;
-
-	key.objectid = inode;
-	key.type = TYPE_INODE;
-	key.offset = INODE_KEY_OFFSET;
-	ret = insert_empty_item(&fsi->fs_root, &key, &p, ins_len);
-	if (ret) return ret;
-
-	imd = (struct inode_metadata *) metadata_for(&p);
-	imd->inode_type = inode_type;
-	imd->ctime = time(NULL);
-	imd->mtime = time(NULL);
-
-	free_path(&p);
-	return SUCCESS;
 }
 
 /* vim: set ts=4 sw=4 tags=tags: */

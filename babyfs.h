@@ -173,7 +173,17 @@ extern int write_superblock(struct fs_info fs_info);
 /* tree.c */
 extern struct cache *init_node(blocknr_t blocknr, uint16_t type,
 				uint16_t level);
-extern blocknr_t do_alloc(struct fs_info *fs_info, struct cache *nearby,
+extern void free_path(struct path *p);
+extern struct key *key_for(struct cache *node, int slot);
+extern void *metadata_for(struct path *p);
+extern int insert_empty_item(struct root *r, struct key *key, struct path *p,
+						int ins_len);
+extern int search_slot(struct root *r, struct key *key, struct path *p,
+						int ins_len);
+extern int step_to_next_slot(struct path *p);
+
+/* extent.c */
+extern blocknr_t alloc_block(struct fs_info *fs_info, struct cache *nearby,
 			uint16_t type);
 extern blocknr_t mkfs_alloc_block(struct root *extent_root, blocknr_t nearby,
 				uint16_t type);
@@ -181,6 +191,7 @@ extern blocknr_t normal_alloc_block(struct root *extent_root, blocknr_t nearby,
 				uint16_t type);
 extern int insert_extent(struct root *extent_root, uint32_t blocknr,
 			uint16_t type, uint32_t block_count);
+
+/* fs.c */
 extern int insert_inode(struct fs_info *fsi, uint32_t inode,
 			uint16_t inode_type);
-extern void free_path(struct path *p);

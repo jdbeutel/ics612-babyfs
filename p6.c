@@ -7,8 +7,6 @@
  */
 
 #include <stdio.h>
-#include <time.h>	/* time() */
-#include <string.h>	/* memset() */
 #include <assert.h>	/* assert() */
 #include "babyfs.h"
 
