@@ -4,37 +4,38 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.8	//
-BABYFS_VERSION	babyfs.h	102;"	d
+BABYFS_VERSION	babyfs.h	103;"	d
 BLOCKSIZE	p6.h	25;"	d
 CACHE_COUNT	cache.c	32;"	d	file:
-FAILURE	babyfs.h	123;"	d
-FALSE	babyfs.h	121;"	d
+EXTRA_INSERT_KEYS	babyfs.h	98;"	d
+FAILURE	babyfs.h	124;"	d
+FALSE	babyfs.h	122;"	d
 HEADER_MAGIC	babyfs.h	33;"	d
 INDEX_TYPE	babyfs.h	30;"	d
 INODE_DIR	babyfs.h	76;"	d
 INODE_FILE	babyfs.h	77;"	d
 INODE_KEY_OFFSET	babyfs.h	86;"	d
-KEY_FOUND	babyfs.h	124;"	d
-KEY_NOT_FOUND	babyfs.h	125;"	d
+KEY_FOUND	babyfs.h	125;"	d
+KEY_NOT_FOUND	babyfs.h	126;"	d
 LEAF_TYPE	babyfs.h	29;"	d
 LEAF_TYPE_FOR	babyfs.h	31;"	d
 MAX_FILE_NAME_LENGTH	p6.h	6;"	d
 MAX_ITEMS	babyfs.h	67;"	d
 MAX_KEY_PTRS	babyfs.h	66;"	d
-MAX_LEVEL	babyfs.h	128;"	d
-MAX_LOWER_BOUNDS	babyfs.h	99;"	d
+MAX_LEVEL	babyfs.h	129;"	d
+MAX_LOWER_BOUNDS	babyfs.h	100;"	d
 MAX_OPEN_FILES	p6.h	7;"	d
-MIN_LOWER_BOUNDS	babyfs.h	98;"	d
+MIN_LOWER_BOUNDS	babyfs.h	99;"	d
 NODE_PAYLOAD_BYTES	babyfs.h	65;"	d
-NULL	babyfs.h	119;"	d
+NULL	babyfs.h	120;"	d
 P6_H	p6.h	4;"	d
-PRIVATE	babyfs.h	126;"	d
-PUBLIC	babyfs.h	127;"	d
+PRIVATE	babyfs.h	127;"	d
+PUBLIC	babyfs.h	128;"	d
 ROOT_DIR_INODE	babyfs.h	85;"	d
-SUCCESS	babyfs.h	122;"	d
-SUPERBLOCK_NR	babyfs.h	103;"	d
-SUPER_MAGIC	babyfs.h	101;"	d
-TRUE	babyfs.h	120;"	d
+SUCCESS	babyfs.h	123;"	d
+SUPERBLOCK_NR	babyfs.h	104;"	d
+SUPER_MAGIC	babyfs.h	102;"	d
+TRUE	babyfs.h	121;"	d
 TYPE_DIR_ENT	babyfs.h	18;"	d
 TYPE_EXT_IDX	babyfs.h	23;"	d
 TYPE_EXT_LEAF	babyfs.h	24;"	d
@@ -44,14 +45,14 @@ TYPE_FS_IDX	babyfs.h	25;"	d
 TYPE_FS_LEAF	babyfs.h	26;"	d
 TYPE_INODE	babyfs.h	17;"	d
 TYPE_SUPERBLOCK	babyfs.h	22;"	d
-UPPER_BOUNDS	babyfs.h	100;"	d
+UPPER_BOUNDS	babyfs.h	101;"	d
 add_to_mru	cache.c	/^PRIVATE void add_to_mru(struct cache *c) {$/;"	f
 alloc_block	babyfs.h	/^	blocknr_t (*alloc_block)(struct root *extent_root, blocknr_t nearby,$/;"	m	struct:fs_info
 alloc_block	extent.c	/^PUBLIC blocknr_t alloc_block(struct fs_info *fs_info, struct cache *nearby,$/;"	f
 any_dirty	cache.c	/^PRIVATE int any_dirty() {$/;"	f
 block	p6.h	/^typedef char block [BLOCKSIZE];$/;"	t
-blocknr	babyfs.h	/^	blocknr_t blocknr;	\/* even after cache is put back *\/$/;"	m	struct:root
-blocknr	babyfs.h	/^	blocknr_t blocknr;	\/* for testing and simple consistency check *\/$/;"	m	struct:header
+blocknr	babyfs.h	/^	blocknr_t blocknr;			\/* even after cache is put back *\/$/;"	m	struct:root
+blocknr	babyfs.h	/^	blocknr_t blocknr;		\/* for testing and simple consistency check *\/$/;"	m	struct:header
 blocknr	babyfs.h	/^	blocknr_t blocknr;$/;"	m	struct:file_extent_metadata
 blocknr	babyfs.h	/^	blocknr_t blocknr;$/;"	m	struct:key_ptr
 blocknr_t	babyfs.h	/^typedef uint32_t blocknr_t;	\/* need 21 bits for 2G in 1K blocks *\/$/;"	t
@@ -78,8 +79,8 @@ extent_tree_blocknr	babyfs.h	/^	blocknr_t extent_tree_blocknr;	\/* root *\/$/;"	
 fd	block.c	/^static int fd = -1;$/;"	v	file:
 file_extent_metadata	babyfs.h	/^struct file_extent_metadata {$/;"	s
 filler1	babyfs.h	/^	uint32_t filler1;	\/* round up to 32 bytes for neat hex dumps *\/$/;"	m	struct:inode_metadata
-filler1	babyfs.h	/^	uint8_t filler1;	\/* round up to 16 bytes for neat hex dumps *\/$/;"	m	struct:header
-filler2	babyfs.h	/^	uint16_t filler2;	\/* round up to 16 bytes for neat hex dumps *\/$/;"	m	struct:header
+filler1	babyfs.h	/^	uint8_t filler1;		\/* round up to 16 bytes for neat hex dumps *\/$/;"	m	struct:header
+filler2	babyfs.h	/^	uint16_t filler2;		\/* round up to 16 bytes for neat hex dumps *\/$/;"	m	struct:header
 filler2	babyfs.h	/^	uint64_t filler2;	\/* lines up times in hex dump for comparison *\/$/;"	m	struct:inode_metadata
 find_cache_for	cache.c	/^PRIVATE struct cache *find_cache_for(blocknr_t n) {$/;"	f
 find_free_extent	extent.c	/^PRIVATE blocknr_t find_free_extent(struct root *ext_rt, blocknr_t nearby,$/;"	f
@@ -89,10 +90,10 @@ free_path	tree.c	/^PUBLIC void free_path(struct path *p) {$/;"	f
 fs_info	babyfs.h	/^	struct fs_info *fs_info;$/;"	m	struct:root	typeref:struct:root::fs_info
 fs_info	babyfs.h	/^struct fs_info {$/;"	s
 fs_root	babyfs.h	/^	struct root fs_root;$/;"	m	struct:fs_info	typeref:struct:fs_info::root
-fs_tree_blocknr	babyfs.h	/^	blocknr_t fs_tree_blocknr;	\/* root *\/$/;"	m	struct:superblock
+fs_tree_blocknr	babyfs.h	/^	blocknr_t fs_tree_blocknr;		\/* root *\/$/;"	m	struct:superblock
 get_block	cache.c	/^PUBLIC struct cache *get_block(blocknr_t blocknr) {$/;"	f
 header	babyfs.h	/^	struct header header;$/;"	m	struct:node	typeref:struct:node::header
-header	babyfs.h	/^struct header {			\/* starts all nodes in a tree *\/$/;"	s
+header	babyfs.h	/^struct header {				\/* starts all nodes in a tree *\/$/;"	s
 header_magic	babyfs.h	/^	uint32_t header_magic;	\/* makes easy to spot in hex dumps *\/$/;"	m	struct:header
 init_block	cache.c	/^PUBLIC struct cache *init_block(blocknr_t write_blocknr) {$/;"	f
 init_caches	cache.c	/^PRIVATE void init_caches() {$/;"	f
@@ -106,27 +107,27 @@ insert_inode	fs.c	/^PUBLIC int insert_inode(struct fs_info *fsi, uint32_t inode,
 insert_item_in_leaf	tree.c	/^PRIVATE int insert_item_in_leaf(struct root *r, struct path *p,$/;"	f
 insert_key_ptr	tree.c	/^PRIVATE void insert_key_ptr(struct root *r, struct path *p, int level,$/;"	f
 is_root_level	tree.c	/^PRIVATE int is_root_level(int level, struct path *p) {$/;"	f
-item	babyfs.h	/^struct item {		\/* in leaf nodes *\/$/;"	s
+item	babyfs.h	/^struct item {			\/* in leaf nodes *\/$/;"	s
 item_offset_t	babyfs.h	/^typedef uint16_t item_offset_t;	\/* need 10 bits for bytes within a block *\/$/;"	t
 item_size_t	babyfs.h	/^typedef uint16_t item_size_t;	\/* need 10 bits for bytes within a block *\/$/;"	t
-items	babyfs.h	/^		struct item	items[MAX_ITEMS];	\/* in leaf nodes *\/$/;"	m	union:node::u	typeref:struct:node::u::item
+items	babyfs.h	/^		struct item	items[MAX_ITEMS];			\/* in leaf nodes *\/$/;"	m	union:node::u	typeref:struct:node::u::item
 key	babyfs.h	/^	struct key key;$/;"	m	struct:item	typeref:struct:item::key
 key	babyfs.h	/^	struct key key;$/;"	m	struct:key_ptr	typeref:struct:key_ptr::key
-key	babyfs.h	/^struct key {		\/* in index and leaf nodes *\/$/;"	s
+key	babyfs.h	/^struct key {			\/* in index and leaf nodes *\/$/;"	s
 key_for	tree.c	/^PUBLIC struct key *key_for(struct cache *node, int slot) {$/;"	f
 key_ptr	babyfs.h	/^struct key_ptr {		\/* in index nodes *\/$/;"	s
 key_ptrs	babyfs.h	/^		struct key_ptr	key_ptrs[MAX_KEY_PTRS];	\/* in index nodes *\/$/;"	m	union:node::u	typeref:struct:node::u::key_ptr
 less_recently_used	babyfs.h	/^	struct cache	*less_recently_used,$/;"	m	struct:cache	typeref:struct:cache::cache
-level	babyfs.h	/^	uint16_t level;		\/* number of nodes down to a leaf *\/$/;"	m	struct:header
+level	babyfs.h	/^	uint16_t level;			\/* number of nodes down to a leaf *\/$/;"	m	struct:header
+lower_bounds	babyfs.h	/^	uint8_t lower_bounds;			\/* b for balancing inner nodes b..3b *\/$/;"	m	struct:superblock
 lower_bounds	babyfs.h	/^	uint8_t lower_bounds;	\/* b for balancing inner nodes b..3b *\/$/;"	m	struct:fs_info
-lower_bounds	babyfs.h	/^	uint8_t lower_bounds;	\/* b for balancing inner nodes b..3b *\/$/;"	m	struct:superblock
 lru	cache.c	/^static struct cache *lru;	\/* least-recently-used (free) list *\/$/;"	v	typeref:struct:cache	file:
 main	test1.c	/^int main (int argc, char ** argv)$/;"	f
 main	testp6.c	/^int main (int argc, char ** argv)$/;"	f
 metadata_for	tree.c	/^PUBLIC void *metadata_for(struct path *p) {$/;"	f
 metadata_size_for	tree.c	/^PRIVATE int metadata_size_for(struct path *p) {$/;"	f
 mkfs_alloc_block	extent.c	/^PUBLIC blocknr_t mkfs_alloc_block(struct root *ext_rt, blocknr_t nearby,$/;"	f
-more_recently_used	babyfs.h	/^			*more_recently_used;$/;"	m	struct:cache	typeref:struct:cache::
+more_recently_used	babyfs.h	/^					*more_recently_used;$/;"	m	struct:cache	typeref:struct:cache::
 mru	cache.c	/^static struct cache *mru;	\/* most-recently-used; other end of the list *\/$/;"	v	typeref:struct:cache	file:
 mtime	babyfs.h	/^	time_t mtime;		\/* 64 bits on my x86_64 *\/$/;"	m	struct:inode_metadata
 my_close	p6.c	/^int my_close (int fd)$/;"	f
@@ -144,41 +145,41 @@ node	babyfs.h	/^		struct node node;$/;"	m	union:cache::u2	typeref:struct:cache::
 node	babyfs.h	/^struct node {$/;"	s
 nodes	babyfs.h	/^	struct cache *nodes[MAX_LEVEL];$/;"	m	struct:path	typeref:struct:path::cache
 normal_alloc_block	extent.c	/^PUBLIC blocknr_t normal_alloc_block(struct root *ext_rt, blocknr_t nearby,$/;"	f
-nritems	babyfs.h	/^	uint8_t nritems;	\/* populated key or item slots *\/$/;"	m	struct:header
-objectid	babyfs.h	/^	uint32_t objectid;	\/* inode or blocknr *\/$/;"	m	struct:key
+nritems	babyfs.h	/^	uint8_t nritems;		\/* populated key or item slots *\/$/;"	m	struct:header
+objectid	babyfs.h	/^	uint32_t objectid;		\/* inode or blocknr *\/$/;"	m	struct:key
 offset	babyfs.h	/^	item_offset_t offset;	\/* of metadata, in bytes from start of block *\/$/;"	m	struct:item
 offset	babyfs.h	/^	uint32_t offset;$/;"	m	struct:key
 path	babyfs.h	/^struct path {$/;"	s
 ptr_for	tree.c	/^PRIVATE blocknr_t ptr_for(struct cache *node, int slot) {$/;"	f
 put_block	cache.c	/^PUBLIC void put_block(struct cache *c) {$/;"	f
 read_block	block.c	/^int read_block (int block_num, char * block)$/;"	f
-read_blocknr	babyfs.h	/^	blocknr_t read_blocknr;		\/* if was_read, where from\/to *\/$/;"	m	struct:cache
+read_blocknr	babyfs.h	/^	blocknr_t read_blocknr;			\/* if was_read, where from\/to *\/$/;"	m	struct:cache
 remove_from_lru	cache.c	/^PRIVATE void remove_from_lru(struct cache *c) {$/;"	f
 root	babyfs.h	/^struct root {$/;"	s
 search_slot	tree.c	/^PUBLIC int search_slot(struct root *r, struct key *key, struct path *p,$/;"	f
 shadow_block_to	cache.c	/^PUBLIC void shadow_block_to(struct cache *c, blocknr_t write_blocknr) {	$/;"	f
-size	babyfs.h	/^	item_size_t size;	\/* of metadata, in bytes *\/$/;"	m	struct:item
+size	babyfs.h	/^	item_size_t size;		\/* of metadata, in bytes *\/$/;"	m	struct:item
 size	babyfs.h	/^	uint32_t size;	\/* in bytes *\/$/;"	m	struct:file_extent_metadata
 slots	babyfs.h	/^	int slots[MAX_LEVEL];$/;"	m	struct:path
 split_index_node	tree.c	/^PRIVATE int split_index_node(struct root *r, struct path *p, int level) {$/;"	f
 step_to_next_slot	tree.c	/^PUBLIC int step_to_next_slot(struct path *p) {$/;"	f
-super_magic	babyfs.h	/^	uint32_t super_magic;	\/* magic number protects from my_mkfs() *\/$/;"	m	struct:superblock
+super_magic	babyfs.h	/^	uint32_t super_magic;			\/* magic number protects from my_mkfs() *\/$/;"	m	struct:superblock
 superblock	babyfs.h	/^		struct superblock superblock;$/;"	m	union:cache::u2	typeref:struct:cache::u2::superblock
-superblock	babyfs.h	/^struct superblock {	\/* first block of device *\/$/;"	s
+superblock	babyfs.h	/^struct superblock {			\/* first block of device *\/$/;"	s
 test_file	testp6.c	/^static int test_file (char * path, char * buffer, int size, int max_size)$/;"	f	file:
-total_blocks	babyfs.h	/^	int total_blocks;	\/* device size *\/$/;"	m	struct:fs_info
-total_blocks	babyfs.h	/^	int total_blocks;	\/* device size *\/$/;"	m	struct:superblock
-type	babyfs.h	/^	uint16_t type;		\/* for testing, redundant with key.type *\/$/;"	m	struct:header
+total_blocks	babyfs.h	/^	int total_blocks;				\/* device size *\/$/;"	m	struct:superblock
+total_blocks	babyfs.h	/^	int total_blocks;		\/* device size *\/$/;"	m	struct:fs_info
+type	babyfs.h	/^	uint16_t type;			\/* for testing, redundant with key.type *\/$/;"	m	struct:header
 type	babyfs.h	/^	uint32_t type;$/;"	m	struct:key
 u	babyfs.h	/^	union u {$/;"	u	struct:node
 u	babyfs.h	/^	} u;$/;"	m	struct:cache	typeref:union:cache::u2
 u	babyfs.h	/^	} u;$/;"	m	struct:node	typeref:union:node::u
 u2	babyfs.h	/^	union u2 {$/;"	u	struct:cache
 update_index_key	tree.c	/^PRIVATE void update_index_key(struct root *r, struct path *p, int level,$/;"	f
-users	babyfs.h	/^	unsigned int users;		\/* number currently using (recursive) *\/$/;"	m	struct:cache
-version	babyfs.h	/^	uint8_t version;	\/* 0 *\/$/;"	m	struct:superblock
-was_read	babyfs.h	/^	unsigned int	was_read:1,	\/* was read from or written to device *\/$/;"	m	struct:cache
-will_write	babyfs.h	/^			will_write:1;	\/* was allocated, needs flushing *\/$/;"	m	struct:cache
+users	babyfs.h	/^	unsigned int users;				\/* number currently using (recursive) *\/$/;"	m	struct:cache
+version	babyfs.h	/^	uint8_t version;				\/* 0 *\/$/;"	m	struct:superblock
+was_read	babyfs.h	/^	unsigned int	was_read:1,		\/* was read from or written to device *\/$/;"	m	struct:cache
+will_write	babyfs.h	/^					will_write:1;	\/* was allocated, needs flushing *\/$/;"	m	struct:cache
 write_block	block.c	/^int write_block (int block_num, char * block)$/;"	f
-write_blocknr	babyfs.h	/^	blocknr_t write_blocknr;	\/* if allocated for writing *\/$/;"	m	struct:cache
+write_blocknr	babyfs.h	/^	blocknr_t write_blocknr;		\/* if allocated for writing *\/$/;"	m	struct:cache
 write_superblock	cache.c	/^PUBLIC int write_superblock(struct fs_info fs_info) {$/;"	f

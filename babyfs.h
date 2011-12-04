@@ -14,7 +14,7 @@ typedef uint16_t item_offset_t;	/* need 10 bits for bytes within a block */
 typedef uint16_t item_size_t;	/* need 10 bits for bytes within a block */
 
 /* FS tree node and key types */
-#define TYPE_INODE		0xf0
+#define TYPE_INODE			0xf0
 #define TYPE_DIR_ENT		0xf1
 #define TYPE_FILE_EXTENT	0xf2
 
@@ -22,7 +22,7 @@ typedef uint16_t item_size_t;	/* need 10 bits for bytes within a block */
 #define TYPE_SUPERBLOCK		0xe0
 #define TYPE_EXT_IDX		0xe1
 #define TYPE_EXT_LEAF		0xe2
-#define TYPE_FS_IDX		0xe3
+#define TYPE_FS_IDX			0xe3
 #define TYPE_FS_LEAF		0xe4
 #define TYPE_FILE_DATA		0xe5
 
@@ -35,18 +35,18 @@ typedef uint16_t item_size_t;	/* need 10 bits for bytes within a block */
  * in struct key anyway, and this lines up nicely with od -X, so I won't
  * worry about minimal format on disk for this project.
  */
-struct header {			/* starts all nodes in a tree */
+struct header {				/* starts all nodes in a tree */
 	uint32_t header_magic;	/* makes easy to spot in hex dumps */
-	uint16_t type;		/* for testing, redundant with key.type */
-	uint16_t level;		/* number of nodes down to a leaf */
-	blocknr_t blocknr;	/* for testing and simple consistency check */
-	uint8_t nritems;	/* populated key or item slots */
-	uint8_t filler1;	/* round up to 16 bytes for neat hex dumps */
-	uint16_t filler2;	/* round up to 16 bytes for neat hex dumps */
+	uint16_t type;			/* for testing, redundant with key.type */
+	uint16_t level;			/* number of nodes down to a leaf */
+	blocknr_t blocknr;		/* for testing and simple consistency check */
+	uint8_t nritems;		/* populated key or item slots */
+	uint8_t filler1;		/* round up to 16 bytes for neat hex dumps */
+	uint16_t filler2;		/* round up to 16 bytes for neat hex dumps */
 };
 
-struct key {		/* in index and leaf nodes */
-	uint32_t objectid;	/* inode or blocknr */
+struct key {			/* in index and leaf nodes */
+	uint32_t objectid;		/* inode or blocknr */
 	uint32_t type;
 	uint32_t offset;
 };
@@ -56,20 +56,20 @@ struct key_ptr {		/* in index nodes */
 	blocknr_t blocknr;
 };
 
-struct item {		/* in leaf nodes */
+struct item {			/* in leaf nodes */
 	struct key key;
 	item_offset_t offset;	/* of metadata, in bytes from start of block */
-	item_size_t size;	/* of metadata, in bytes */
+	item_size_t size;		/* of metadata, in bytes */
 };
 
 #define NODE_PAYLOAD_BYTES	(BLOCKSIZE-sizeof(struct header))
-#define MAX_KEY_PTRS	(NODE_PAYLOAD_BYTES/sizeof(struct key_ptr))
-#define MAX_ITEMS	(NODE_PAYLOAD_BYTES/sizeof(struct item))
+#define MAX_KEY_PTRS		(NODE_PAYLOAD_BYTES/sizeof(struct key_ptr))
+#define MAX_ITEMS			(NODE_PAYLOAD_BYTES/sizeof(struct item))
 struct node {
 	struct header header;
 	union u {
 		struct key_ptr	key_ptrs[MAX_KEY_PTRS];	/* in index nodes */
-		struct item	items[MAX_ITEMS];	/* in leaf nodes */
+		struct item	items[MAX_ITEMS];			/* in leaf nodes */
 	} u;
 };
 
@@ -95,20 +95,21 @@ struct file_extent_metadata {
 	uint32_t size;	/* in bytes */
 };
 
-#define MIN_LOWER_BOUNDS	2	/* for testing tree ops */
-#define MAX_LOWER_BOUNDS	(MAX_KEY_PTRS/3)
-#define UPPER_BOUNDS(x)		((x)*3)
-#define SUPER_MAGIC		0xaaa1babf
+#define EXTRA_INSERT_KEYS	1		/* when a leaf node is split into 3 */
+#define MIN_LOWER_BOUNDS	2		/* for testing tree ops */
+#define MAX_LOWER_BOUNDS	((MAX_KEY_PTRS - EXTRA_INSERT_KEYS)/3)
+#define UPPER_BOUNDS(x)		((x)*3)	/* includes room for EXTRA_INSERT_KEYS */
+#define SUPER_MAGIC			0xaaa1babf
 #define BABYFS_VERSION		0
 #define SUPERBLOCK_NR		0
 
-struct superblock {	/* first block of device */
-	uint32_t super_magic;	/* magic number protects from my_mkfs() */
-	uint8_t version;	/* 0 */
+struct superblock {			/* first block of device */
+	uint32_t super_magic;			/* magic number protects from my_mkfs() */
+	uint8_t version;				/* 0 */
 	blocknr_t extent_tree_blocknr;	/* root */
-	blocknr_t fs_tree_blocknr;	/* root */
-	int total_blocks;	/* device size */
-	uint8_t lower_bounds;	/* b for balancing inner nodes b..3b */
+	blocknr_t fs_tree_blocknr;		/* root */
+	int total_blocks;				/* device size */
+	uint8_t lower_bounds;			/* b for balancing inner nodes b..3b */
 };
 
 
@@ -128,13 +129,13 @@ struct superblock {	/* first block of device */
 #define MAX_LEVEL 6
 
 struct cache {
-	unsigned int	was_read:1,	/* was read from or written to device */
-			will_write:1;	/* was allocated, needs flushing */
-	blocknr_t read_blocknr;		/* if was_read, where from/to */
-	blocknr_t write_blocknr;	/* if allocated for writing */
-	unsigned int users;		/* number currently using (recursive) */
+	unsigned int	was_read:1,		/* was read from or written to device */
+					will_write:1;	/* was allocated, needs flushing */
+	blocknr_t read_blocknr;			/* if was_read, where from/to */
+	blocknr_t write_blocknr;		/* if allocated for writing */
+	unsigned int users;				/* number currently using (recursive) */
 	struct cache	*less_recently_used,
-			*more_recently_used;
+					*more_recently_used;
 	union u2 {
 		block contents;
 		struct node node;
@@ -144,16 +145,16 @@ struct cache {
 
 struct fs_info;
 struct root {
-	blocknr_t blocknr;	/* even after cache is put back */
+	blocknr_t blocknr;			/* even after cache is put back */
 	struct fs_info *fs_info;
 };
 struct fs_info {
 	struct root extent_root;
 	struct root fs_root;
-	int total_blocks;	/* device size */
+	int total_blocks;		/* device size */
 	uint8_t lower_bounds;	/* b for balancing inner nodes b..3b */
 	blocknr_t (*alloc_block)(struct root *extent_root, blocknr_t nearby,
-				uint16_t type);
+							uint16_t type);
 };
 
 /* the path from a root to a leaf.  The leaf is level 0. */
@@ -177,21 +178,23 @@ extern void free_path(struct path *p);
 extern struct key *key_for(struct cache *node, int slot);
 extern void *metadata_for(struct path *p);
 extern int insert_empty_item(struct root *r, struct key *key, struct path *p,
-						int ins_len);
+							int ins_len);
 extern int search_slot(struct root *r, struct key *key, struct path *p,
 						int ins_len);
 extern int step_to_next_slot(struct path *p);
 
 /* extent.c */
 extern blocknr_t alloc_block(struct fs_info *fs_info, struct cache *nearby,
-			uint16_t type);
+							uint16_t type);
 extern blocknr_t mkfs_alloc_block(struct root *extent_root, blocknr_t nearby,
-				uint16_t type);
+								uint16_t type);
 extern blocknr_t normal_alloc_block(struct root *extent_root, blocknr_t nearby,
-				uint16_t type);
+									uint16_t type);
 extern int insert_extent(struct root *extent_root, uint32_t blocknr,
-			uint16_t type, uint32_t block_count);
+						uint16_t type, uint32_t block_count);
 
 /* fs.c */
 extern int insert_inode(struct fs_info *fsi, uint32_t inode,
-			uint16_t inode_type);
+						uint16_t inode_type);
+
+/* vim: set ts=4 sw=4 tags=tags: */
