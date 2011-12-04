@@ -20,11 +20,6 @@ PUBLIC struct cache *init_node( blocknr_t blocknr,
 	return c;
 }
 
-PUBLIC blocknr_t mkfs_alloc_block(struct root *ext_rt, blocknr_t nearby) {
-	printf("debug: mkfs_alloc_block %d\n", nearby + 1);
-	return nearby + 1;	/* just while making the extent tree */
-}
-
 PRIVATE int is_root_level(int level, struct path *p);
 PRIVATE blocknr_t ptr_for(struct cache *node, int slot);
 
@@ -73,11 +68,10 @@ PRIVATE struct key *key_for(struct cache *node, int slot);
 PRIVATE blocknr_t find_free_extent(struct root *ext_rt, blocknr_t nearby,
 									uint32_t block_count) {
 	struct key first;
-	struct key *prev;
-	struct key *next;
+	struct key *key;
 	struct path p;
-	blocknr_t after_prev;
-	uint32_t free_blocks;
+	blocknr_t block_after_extent;
+	int32_t free_blocks;	/* may be negative for overlapping extents */
 	int ret;
 
 	first.objectid = 0;		/* todo: start from nearby? */
@@ -85,45 +79,54 @@ PRIVATE blocknr_t find_free_extent(struct root *ext_rt, blocknr_t nearby,
 	first.offset = 0;
 	ret = search_slot(ext_rt, &first, &p, 0);
 	if (ret < 0) return ret;	/* todo: use a signed type for return value? */
-	prev = key_for(p.nodes[0], p.slots[0]);
+	key = key_for(p.nodes[0], p.slots[0]);
 	while (TRUE) {
-		after_prev = prev->objectid + prev->offset;
+		block_after_extent = key->objectid + key->offset;
 		ret = step_to_next_slot(&p);
 		if (ret < 0) return ret;
 		if (ret > 0) {	/* no more items */
-			free_blocks = ext_rt->fs_info->total_blocks - after_prev;
+			free_blocks = ext_rt->fs_info->total_blocks - block_after_extent;
 			if (free_blocks >= block_count) {
 				break;
 			} else {
-				after_prev = -ENOSPC;
+				block_after_extent = -ENOSPC;
 				break;
 			}
 		}
-		next = key_for(p.nodes[0], p.slots[0]);
-		free_blocks = next->objectid - after_prev;
+		key = key_for(p.nodes[0], p.slots[0]);
+		free_blocks = key->objectid - block_after_extent;
 		if (free_blocks >= block_count) {
 			break;
 		}
-		prev = next;
 	}
-	free_path(&p);
-	return after_prev;
+	if (ret == 0) {		/* then the next slot is on the path */
+		free_path(&p);
+	}
+	return block_after_extent;
 }
 
-PUBLIC blocknr_t normal_alloc_block(struct root *ext_rt, blocknr_t nearby) {
-	printf("debug: normal_alloc_block %d\n", nearby + 1);
-	/* todo:
-	 * b = find_free_extent(ext_rt, nearby, 1);
-	 * insert_extent(struct fs_info *fsi, b, uint16_t type, 1);
-	 * return b;
-	 */ 
+PUBLIC blocknr_t mkfs_alloc_block(struct root *ext_rt, blocknr_t nearby,
+									uint16_t type) {
+	printf("debug: mkfs_alloc_block %d\n", nearby + 1);
 	return nearby + 1;	/* just while making the extent tree */
 }
 
-PRIVATE blocknr_t do_alloc(struct root *r, struct cache *nearby) {
+PUBLIC blocknr_t normal_alloc_block(struct root *ext_rt, blocknr_t nearby,
+									uint16_t type) {
+	uint32_t block_count = 1;
+	blocknr_t b;
+
+	printf("debug: normal_alloc_block %d\n", nearby + 1);
+	b = find_free_extent(ext_rt, nearby, block_count);
+	insert_extent(ext_rt, b, type, block_count);
+	return b;
+}
+
+PUBLIC blocknr_t do_alloc(struct fs_info *fs_info, struct cache *nearby,
+							uint16_t type) {
 	blocknr_t hint = nearby->will_write ? nearby->write_blocknr
 						: nearby->was_read ? nearby->read_blocknr : 0;
-	return r->fs_info->alloc_block(&r->fs_info->extent_root, hint);
+	return fs_info->alloc_block(&fs_info->extent_root, hint, type);
 }
 
 PRIVATE int is_root_level(int level, struct path *p) {
@@ -186,7 +189,7 @@ PRIVATE int ensure_will_write(struct root *r, struct path *p, int level) {
 
 	if (!node->will_write) {	/* need to shadow */
 		assert(node->was_read);		/* must have come from somewhere */
-		shadow = do_alloc(r, node);
+		shadow = do_alloc(r->fs_info, node, node->u.node.header.type);
 		if (!shadow) return -ENOSPC;
 		shadow_block_to(node, shadow);
 		if (!is_root_level(level, p)) {	/* need to update ptr in parent node */
@@ -286,7 +289,7 @@ PRIVATE int split_index_node(struct root *r, struct path *p, int level) {
 	blocknr_t rightnr;
 
 	assert(left->will_write);	/* was ensured on tree descent */
-	rightnr = do_alloc(r, left);
+	rightnr = do_alloc(r->fs_info, left, left->u.node.header.type);
 	if (!rightnr) return -ENOSPC;
 	right = init_node(rightnr, left->u.node.header.type, level);
 	if (!right) return -errno;
@@ -295,7 +298,7 @@ PRIVATE int split_index_node(struct root *r, struct path *p, int level) {
 		struct cache *c;
 
 		assert(level < MAX_LEVEL - 1);	/* has room to add another level */
-		new_rootnr = do_alloc(r, right);
+		new_rootnr = do_alloc(r->fs_info, right, right->u.node.header.type);
 		if (!new_rootnr) return -ENOSPC;
 		c = init_node(new_rootnr, right->u.node.header.type, level + 1);
 		if (!c) return -errno;
@@ -378,15 +381,16 @@ PUBLIC int search_slot(struct root *r, struct key *key, struct path *p,
 		if (!hdr->nritems) {
 			struct cache *leaf;
 			blocknr_t leafnr;
+			uint16_t type = LEAF_TYPE_FOR(hdr->type);
 			assert(level == 1);
 			assert(!p->nodes[2]);
 			assert(ins_len > 0);
 
 			p->slots[level] = 0;
 			/* init first leaf and add to path, but leave empty */
-			leafnr = do_alloc(r, node);
+			leafnr = do_alloc(r->fs_info, node, type);
 			if (!leafnr) return -ENOSPC;
-			leaf = init_node(leafnr, LEAF_TYPE_FOR(hdr->type), 0);
+			leaf = init_node(leafnr, type, 0);
 			if (!leaf) return -errno;
 			/* a new node gets a new ptr to it */
 			insert_key_ptr(r, p, level, key, leafnr);
@@ -485,7 +489,7 @@ PUBLIC void free_path(struct path *p) {
 	} while(!is_root_level(level++, p));
 }
 
-PUBLIC int insert_extent(struct fs_info *fsi, uint32_t blocknr, uint16_t type,
+PUBLIC int insert_extent(struct root *ext_rt, uint32_t blocknr, uint16_t type,
 						uint32_t block_count) {
 	struct path p;
 	struct key key;
@@ -494,7 +498,7 @@ PUBLIC int insert_extent(struct fs_info *fsi, uint32_t blocknr, uint16_t type,
 	key.objectid = blocknr;
 	key.type = type;
 	key.offset = block_count;
-	ret = insert_empty_item(&fsi->extent_root, &key, &p, sizeof(struct item));
+	ret = insert_empty_item(ext_rt, &key, &p, sizeof(struct item));
 	if (ret) return ret;
 	/* no metadata for project 6 extents */
 	free_path(&p);

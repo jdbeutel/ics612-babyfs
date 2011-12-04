@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <time.h>	/* time() */
 #include <string.h>	/* memset() */
+#include <assert.h>	/* assert() */
 #include "babyfs.h"
 
 /* open an exisiting file for reading or writing */
@@ -77,6 +78,7 @@ void my_mkfs ()
 	struct fs_info fs_info;
 	struct cache *cache;
 	int devsize;
+	blocknr_t b;
 
 	cache = get_block(SUPERBLOCK_NR);
 	if (!cache)	return;
@@ -99,19 +101,22 @@ void my_mkfs ()
 	cache = init_node(1, TYPE_EXT_IDX, 1);
 	fs_info.extent_root.blocknr = cache->write_blocknr;
 	fs_info.extent_root.fs_info = &fs_info;
-	put_block(cache);
 
 	/* add extents via basic tree ops */
-	insert_extent(&fs_info, 0, TYPE_SUPERBLOCK, 1);
-	insert_extent(&fs_info, 1, TYPE_EXT_IDX, 1);
-	insert_extent(&fs_info, 2, TYPE_EXT_LEAF, 1);
-	insert_extent(&fs_info, 3, TYPE_FS_IDX, 1);
-	insert_extent(&fs_info, 4, TYPE_FS_LEAF, 1);
+	insert_extent(&fs_info.extent_root, 0, TYPE_SUPERBLOCK, 1);
+	insert_extent(&fs_info.extent_root, 1, TYPE_EXT_IDX, 1);
+	insert_extent(&fs_info.extent_root, 2, TYPE_EXT_LEAF, 1);
+
+	/* extents bootstrapped now, so allocate normally for FS tree */
+	fs_info.alloc_block = normal_alloc_block;
+	b = do_alloc(&fs_info, cache, TYPE_FS_IDX);	/* block for FS tree root */
+	assert(b == 3);
+	put_block(cache);	/* extent tree root node */
 
 	/* FS tree root node */
-	cache = init_node(3, TYPE_FS_IDX, 1);
+	cache = init_node(b, TYPE_FS_IDX, 1);
 	fs_info.fs_root.blocknr = cache->write_blocknr;
-	fs_info.fs_root.fs_info = &fs_info;	/* quite circular */
+	fs_info.fs_root.fs_info = &fs_info;	/* circular */
 	put_block(cache);
 
 	insert_inode(&fs_info, ROOT_DIR_INODE, INODE_DIR);
