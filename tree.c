@@ -6,6 +6,7 @@
 #include <assert.h>	/* assert() */
 #include "babyfs.h"
 
+/* initializes a cache for writing a new node of a tree (not reading first) */
 PUBLIC struct cache *init_node( blocknr_t blocknr,
 								uint16_t type, uint16_t level) {
 	printf("debug: init_node %d %x %d\n", blocknr, type, level);
@@ -25,6 +26,7 @@ PRIVATE int is_root_level(int level, struct path *p) {
 	return level == MAX_LEVEL - 1 || !p->nodes[level + 1];
 }
 
+/* returns pointer to the key at the given slot of the given node */
 PUBLIC struct key *key_for(struct cache *node, int slot) {
 	assert(slot < node->u.node.header.nritems);
 	if (INDEX_TYPE(node->u.node.header.type)) {
@@ -48,6 +50,7 @@ PRIVATE int metadata_size_for(struct path *p) {
 	return leaf->u.items[slot].size;
 }
 
+/* returns pointer to metadata of the item on the path (or null if none) */
 PUBLIC void *metadata_for(struct path *p) {
 	struct node *leaf = &p->nodes[0]->u.node;
 	int slot = p->slots[0];
@@ -293,18 +296,21 @@ PRIVATE int ensure_leaf_space(struct root *r, struct path *p, int ins_len) {
  */
 PUBLIC int search_slot(struct root *r, struct key *key, struct path *p,
 						int ins_len) {
-	int ret;
+	int ret, level = -1;
 	blocknr_t blocknr = r->blocknr;		/* start at root blocknr */
 	memset(p, 0, sizeof(*p));		/* make NULL after the root level */
 
 	/* traverse from root to leaf */
 	while (TRUE) {				
-		int i, j, least_key, level, comparison;
+		int i, j, least_key, comparison;
 		struct header *hdr;
 		struct cache *node = get_block(blocknr);
 		if (!node) return -errno;
 		hdr = &node->u.node.header;
 		assert(hdr->header_magic == HEADER_MAGIC);
+		if (level >= 0) {
+			assert(level == hdr->level + 1);	/* level counts down to 0 */
+		}
 		level = hdr->level;
 		p->nodes[level] = node;
 

@@ -121,7 +121,6 @@ level	babyfs.h	/^	uint16_t level;		\/* number of nodes down to a leaf *\/$/;"	m	
 lower_bounds	babyfs.h	/^	uint8_t lower_bounds;	\/* b for balancing inner nodes b..3b *\/$/;"	m	struct:fs_info
 lower_bounds	babyfs.h	/^	uint8_t lower_bounds;	\/* b for balancing inner nodes b..3b *\/$/;"	m	struct:superblock
 lru	cache.c	/^static struct cache *lru;	\/* least-recently-used (free) list *\/$/;"	v	typeref:struct:cache	file:
-main	sample.c	/^     int main(int argc, char *argv[])$/;"	f
 main	test1.c	/^int main (int argc, char ** argv)$/;"	f
 main	testp6.c	/^int main (int argc, char ** argv)$/;"	f
 metadata_for	tree.c	/^PUBLIC void *metadata_for(struct path *p) {$/;"	f
@@ -158,7 +157,6 @@ remove_from_lru	cache.c	/^PRIVATE void remove_from_lru(struct cache *c) {$/;"	f
 root	babyfs.h	/^struct root {$/;"	s
 search_slot	tree.c	/^PUBLIC int search_slot(struct root *r, struct key *key, struct path *p,$/;"	f
 shadow_block_to	cache.c	/^PUBLIC void shadow_block_to(struct cache *c, blocknr_t write_blocknr) {	$/;"	f
-shell_sort	sample.c	/^     static void shell_sort(int a[], int size)$/;"	f	file:
 size	babyfs.h	/^	item_size_t size;	\/* of metadata, in bytes *\/$/;"	m	struct:item
 size	babyfs.h	/^	uint32_t size;	\/* in bytes *\/$/;"	m	struct:file_extent_metadata
 slots	babyfs.h	/^	int slots[MAX_LEVEL];$/;"	m	struct:path
