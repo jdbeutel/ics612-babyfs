@@ -116,13 +116,13 @@ PUBLIC blocknr_t normal_alloc_block(struct root *ext_rt, blocknr_t nearby,
 	uint32_t block_count = 1;
 	blocknr_t b;
 
-	printf("debug: normal_alloc_block %d\n", nearby + 1);
+	printf("debug: normal_alloc_block near %d\n", nearby + 1);
 	b = find_free_extent(ext_rt, nearby, block_count);
 	insert_extent(ext_rt, b, type, block_count);
 	return b;
 }
 
-PUBLIC blocknr_t do_alloc(struct fs_info *fs_info, struct cache *nearby,
+PUBLIC blocknr_t alloc_block(struct fs_info *fs_info, struct cache *nearby,
 							uint16_t type) {
 	blocknr_t hint = nearby->will_write ? nearby->write_blocknr
 						: nearby->was_read ? nearby->read_blocknr : 0;
@@ -189,7 +189,7 @@ PRIVATE int ensure_will_write(struct root *r, struct path *p, int level) {
 
 	if (!node->will_write) {	/* need to shadow */
 		assert(node->was_read);		/* must have come from somewhere */
-		shadow = do_alloc(r->fs_info, node, node->u.node.header.type);
+		shadow = alloc_block(r->fs_info, node, node->u.node.header.type);
 		if (!shadow) return -ENOSPC;
 		shadow_block_to(node, shadow);
 		if (!is_root_level(level, p)) {	/* need to update ptr in parent node */
@@ -289,7 +289,7 @@ PRIVATE int split_index_node(struct root *r, struct path *p, int level) {
 	blocknr_t rightnr;
 
 	assert(left->will_write);	/* was ensured on tree descent */
-	rightnr = do_alloc(r->fs_info, left, left->u.node.header.type);
+	rightnr = alloc_block(r->fs_info, left, left->u.node.header.type);
 	if (!rightnr) return -ENOSPC;
 	right = init_node(rightnr, left->u.node.header.type, level);
 	if (!right) return -errno;
@@ -298,7 +298,7 @@ PRIVATE int split_index_node(struct root *r, struct path *p, int level) {
 		struct cache *c;
 
 		assert(level < MAX_LEVEL - 1);	/* has room to add another level */
-		new_rootnr = do_alloc(r->fs_info, right, right->u.node.header.type);
+		new_rootnr = alloc_block(r->fs_info, right, right->u.node.header.type);
 		if (!new_rootnr) return -ENOSPC;
 		c = init_node(new_rootnr, right->u.node.header.type, level + 1);
 		if (!c) return -errno;
@@ -388,7 +388,7 @@ PUBLIC int search_slot(struct root *r, struct key *key, struct path *p,
 
 			p->slots[level] = 0;
 			/* init first leaf and add to path, but leave empty */
-			leafnr = do_alloc(r->fs_info, node, type);
+			leafnr = alloc_block(r->fs_info, node, type);
 			if (!leafnr) return -ENOSPC;
 			leaf = init_node(leafnr, type, 0);
 			if (!leaf) return -errno;

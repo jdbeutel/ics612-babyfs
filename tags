@@ -47,6 +47,7 @@ TYPE_SUPERBLOCK	babyfs.h	22;"	d
 UPPER_BOUNDS	babyfs.h	100;"	d
 add_to_mru	cache.c	/^PRIVATE void add_to_mru(struct cache *c) {$/;"	f
 alloc_block	babyfs.h	/^	blocknr_t (*alloc_block)(struct root *extent_root, blocknr_t nearby,$/;"	m	struct:fs_info
+alloc_block	tree.c	/^PUBLIC blocknr_t alloc_block(struct fs_info *fs_info, struct cache *nearby,$/;"	f
 any_dirty	cache.c	/^PRIVATE int any_dirty() {$/;"	f
 block	p6.h	/^typedef char block [BLOCKSIZE];$/;"	t
 blocknr	babyfs.h	/^	blocknr_t blocknr;	\/* even after cache is put back *\/$/;"	m	struct:root
@@ -70,7 +71,6 @@ ctime	babyfs.h	/^	time_t ctime;		\/* 64 bits on my x86_64 *\/$/;"	m	struct:inode
 dev_open	block.c	/^int dev_open ()$/;"	f
 devsize	block.c	/^static int devsize = 0;$/;"	v	file:
 dir_ent_metadata	babyfs.h	/^struct dir_ent_metadata {$/;"	s
-do_alloc	tree.c	/^PUBLIC blocknr_t do_alloc(struct fs_info *fs_info, struct cache *nearby,$/;"	f
 ensure_leaf_space	tree.c	/^PRIVATE int ensure_leaf_space(struct root *r, struct path *p, int ins_len) {$/;"	f
 ensure_will_write	tree.c	/^PRIVATE int ensure_will_write(struct root *r, struct path *p, int level) {$/;"	f
 extent_root	babyfs.h	/^	struct root extent_root;$/;"	m	struct:fs_info	typeref:struct:fs_info::root

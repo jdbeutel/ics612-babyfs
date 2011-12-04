@@ -109,7 +109,7 @@ void my_mkfs ()
 
 	/* extents bootstrapped now, so allocate normally for FS tree */
 	fs_info.alloc_block = normal_alloc_block;
-	b = do_alloc(&fs_info, cache, TYPE_FS_IDX);	/* block for FS tree root */
+	b = alloc_block(&fs_info, cache, TYPE_FS_IDX);	/* block for FS tree root */
 	assert(b == 3);
 	put_block(cache);	/* extent tree root node */
 
