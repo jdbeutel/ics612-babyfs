@@ -1,6 +1,5 @@
 /* ICS612 proj6 jbeutel 2011-11-20 */
 
-#include <stdio.h>
 #include "babyfs.h"
 
 PUBLIC int insert_inode(struct fs_info *fsi, uint32_t inode,
@@ -19,11 +18,14 @@ PUBLIC int insert_inode(struct fs_info *fsi, uint32_t inode,
 
 	imd = (struct inode_metadata *) metadata_for(&p);
 	imd->inode_type = inode_type;
-	imd->ctime = time(NULL);
-	imd->mtime = time(NULL);
+	imd->ctime = get_time();
+	imd->mtime = get_time();
 
 	free_path(&p);
 	return SUCCESS;
+}
+
+PUBLIC struct inode_metadata *get_inode_metadata(uint32_t inode) {
 }
 
 /* vim: set ts=4 sw=4 tags=tags: */

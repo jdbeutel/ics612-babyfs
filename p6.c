@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <assert.h>	/* assert() */
+#include <errno.h>	/* ENOTSUP */
 #include "babyfs.h"
 
 /* open an exisiting file for reading or writing */
@@ -59,8 +60,13 @@ int my_rename (const char * old, const char * new)
 /* only works if all but the last component of the path already exists */
 int my_mkdir (const char * path)
 {
-  printf ("my_mkdir (%s) not implemented\n", path);
-  return -1;
+	char name[MAX_FILE_NAME_LENGTH];
+	int32_t inode = ROOT_DIR_INODE;
+
+	if (*path != '/') {		/* not an absolute path */
+		return -ENOTSUP;	/* no support for current working directory */
+	}
+	return SUCCESS;
 }
 
 int my_rmdir (const char * path)

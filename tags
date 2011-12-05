@@ -92,6 +92,8 @@ fs_info	babyfs.h	/^struct fs_info {$/;"	s
 fs_root	babyfs.h	/^	struct root fs_root;$/;"	m	struct:fs_info	typeref:struct:fs_info::root
 fs_tree_blocknr	babyfs.h	/^	blocknr_t fs_tree_blocknr;		\/* root *\/$/;"	m	struct:superblock
 get_block	cache.c	/^PUBLIC struct cache *get_block(blocknr_t blocknr) {$/;"	f
+get_inode_metadata	fs.c	/^PUBLIC struct inode_metadata *get_inode_metadata(uint32_t inode) {$/;"	f
+get_time	time.c	/^PUBLIC time_t get_time() {$/;"	f
 header	babyfs.h	/^	struct header header;$/;"	m	struct:node	typeref:struct:node::header
 header	babyfs.h	/^struct header {				\/* starts all nodes in a tree *\/$/;"	s
 header_magic	babyfs.h	/^	uint32_t header_magic;	\/* makes easy to spot in hex dumps *\/$/;"	m	struct:header
@@ -122,7 +124,7 @@ level	babyfs.h	/^	uint16_t level;			\/* number of nodes down to a leaf *\/$/;"	m
 lower_bounds	babyfs.h	/^	uint8_t lower_bounds;			\/* b for balancing inner nodes b..3b *\/$/;"	m	struct:superblock
 lower_bounds	babyfs.h	/^	uint8_t lower_bounds;	\/* b for balancing inner nodes b..3b *\/$/;"	m	struct:fs_info
 lru	cache.c	/^static struct cache *lru;	\/* least-recently-used (free) list *\/$/;"	v	typeref:struct:cache	file:
-main	test1.c	/^int main (int argc, char ** argv)$/;"	f
+main	test1.c	/^int main (int argc, char ** argv) {$/;"	f
 main	testp6.c	/^int main (int argc, char ** argv)$/;"	f
 metadata_for	tree.c	/^PUBLIC void *metadata_for(struct path *p) {$/;"	f
 metadata_size_for	tree.c	/^PRIVATE int metadata_size_for(struct path *p) {$/;"	f
@@ -157,6 +159,7 @@ read_blocknr	babyfs.h	/^	blocknr_t read_blocknr;			\/* if was_read, where from\/
 remove_from_lru	cache.c	/^PRIVATE void remove_from_lru(struct cache *c) {$/;"	f
 root	babyfs.h	/^struct root {$/;"	s
 search_slot	tree.c	/^PUBLIC int search_slot(struct root *r, struct key *key, struct path *p,$/;"	f
+set_time	time.c	/^PUBLIC void set_time(time_t t) {$/;"	f
 shadow_block_to	cache.c	/^PUBLIC void shadow_block_to(struct cache *c, blocknr_t write_blocknr) {	$/;"	f
 size	babyfs.h	/^	item_size_t size;		\/* of metadata, in bytes *\/$/;"	m	struct:item
 size	babyfs.h	/^	uint32_t size;	\/* in bytes *\/$/;"	m	struct:file_extent_metadata
@@ -167,6 +170,7 @@ super_magic	babyfs.h	/^	uint32_t super_magic;			\/* magic number protects from m
 superblock	babyfs.h	/^		struct superblock superblock;$/;"	m	union:cache::u2	typeref:struct:cache::u2::superblock
 superblock	babyfs.h	/^struct superblock {			\/* first block of device *\/$/;"	s
 test_file	testp6.c	/^static int test_file (char * path, char * buffer, int size, int max_size)$/;"	f	file:
+test_time	time.c	/^PRIVATE time_t test_time = 0;	\/* for deterministic test results *\/$/;"	v
 total_blocks	babyfs.h	/^	int total_blocks;				\/* device size *\/$/;"	m	struct:superblock
 total_blocks	babyfs.h	/^	int total_blocks;		\/* device size *\/$/;"	m	struct:fs_info
 type	babyfs.h	/^	uint16_t type;			\/* for testing, redundant with key.type *\/$/;"	m	struct:header

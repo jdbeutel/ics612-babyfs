@@ -87,10 +87,10 @@ on the type of the key.
 
 #### FS tree:
 
-	objectid: 1
+	objectid: 0
 		type: INODE, offset: 0 -> inode_type: DIR, ctime: 2011-11-10
-		type: DIR_ENT, offset: 987654 -> name: "foo", inode: 2
-	objectid: 2
+		type: DIR_ENT, offset: 987654 -> name: "foo", inode: 1
+	objectid: 1
 		type: INODE -> inode_type: FILE, ctime: 2011-11-11
 		type: FILE_EXTENT, offset: 0 -> blocknr: 5, size: 42500
 

@@ -1,5 +1,5 @@
 DEPS = babyfs.h p6.h cache.h
-OBJ = block.o cache.o p6.o tree.o extent.o fs.o
+OBJ = block.o cache.o p6.o tree.o extent.o fs.o time.o
 TESTS = testp6 test1
 
 clean:

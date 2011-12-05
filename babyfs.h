@@ -197,4 +197,8 @@ extern int insert_extent(struct root *extent_root, uint32_t blocknr,
 extern int insert_inode(struct fs_info *fsi, uint32_t inode,
 						uint16_t inode_type);
 
+/* time.c */
+extern void set_time(time_t t);
+extern time_t get_time();
+
 /* vim: set ts=4 sw=4 tags=tags: */
