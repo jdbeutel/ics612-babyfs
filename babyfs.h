@@ -127,6 +127,7 @@ struct superblock {			/* first block of device */
 #define PRIVATE static
 #define PUBLIC
 #define MAX_LEVEL 6
+#define FILE_SEPARATOR	'/'
 
 struct cache {
 	unsigned int	was_read:1,		/* was read from or written to device */
@@ -169,7 +170,8 @@ extern void shadow_block_to(struct cache *c, blocknr_t write_blocknr);
 extern struct cache *init_block(blocknr_t write_blocknr);
 extern void put_block(struct cache *c);
 extern int flush_all();
-extern int write_superblock(struct fs_info fs_info);
+extern int write_superblock(struct fs_info *fs_info);
+extern int read_superblock(struct fs_info *fs_info);
 
 /* tree.c */
 extern struct cache *init_node(blocknr_t blocknr, uint16_t type,
@@ -196,6 +198,8 @@ extern int insert_extent(struct root *extent_root, uint32_t blocknr,
 /* fs.c */
 extern int insert_inode(struct fs_info *fsi, uint32_t inode,
 						uint16_t inode_type);
+extern int get_inode_metadata(struct fs_info *fsi, uint32_t inode,
+								struct inode_metadata *imd);
 
 /* time.c */
 extern void set_time(time_t t);

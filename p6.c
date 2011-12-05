@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <assert.h>	/* assert() */
 #include <errno.h>	/* ENOTSUP */
+#include <string.h>	/* strchr() */
 #include "babyfs.h"
 
 /* open an exisiting file for reading or writing */
@@ -60,13 +61,60 @@ int my_rename (const char * old, const char * new)
 /* only works if all but the last component of the path already exists */
 int my_mkdir (const char * path)
 {
-	char name[MAX_FILE_NAME_LENGTH];
-	int32_t inode = ROOT_DIR_INODE;
+	struct fs_info fs_info;
+	char name[MAX_FILE_NAME_LENGTH + 1];
+	char *delim;
+	int32_t inode = ROOT_DIR_INODE, new_inode;
+	struct inode_metadata imd;
+	int ret;
 
-	if (*path != '/') {		/* not an absolute path */
+	ret = read_superblock(&fs_info);
+	if (ret) return ret;
+	if (*path++ != FILE_SEPARATOR) {	/* not an absolute path */
 		return -ENOTSUP;	/* no support for current working directory */
 	}
-	return SUCCESS;
+	ret = get_inode_metadata(&fs_info, inode, &imd);
+	if (ret) return ret;
+	if (imd.inode_type != INODE_DIR) {
+		return -EUCLEAN;	/* root dir isn't a dir */
+	}
+	delim = strchr(path, FILE_SEPARATOR);
+	while (delim) {
+		if (delim - path > MAX_FILE_NAME_LENGTH) {
+			return -ENAMETOOLONG;
+		}
+		memmove(name, path, delim - path);
+		name[delim - path] = '\0';
+		inode = get_dir_ent_inode(&fs_info, inode, name);
+		if (!inode) return -errno;
+		ret = get_inode_metadata(&fs_info, inode, &imd);
+		if (ret) return ret;
+		if (imd.inode_type != INODE_DIR) {
+			return -ENOTDIR;	/* subdir isn't a dir */
+		}
+		path = delim + 1;
+		delim = strchr(path, FILE_SEPARATOR);
+	}
+	if (strlen(path) > MAX_FILE_NAME_LENGTH) {
+		return -ENAMETOOLONG;
+	}
+	if (!strlen(path)) {
+		return -EINVAL;		/* no dir name */
+	}
+	if (get_dir_ent_inode(&fs_info, inode, path)) {
+		return -EEXIST;
+	}
+	new_inode = find_free_inode(&fs_info);
+	if (!new_inode) return -errno;
+	ret = insert_dir_ent(&fs_info, inode, path, new_inode);
+	if (ret) return ret;
+	ret = insert_inode(&fs_info, new_inode, INODE_DIR);
+	if (ret) return ret;
+	/* todo: discard all caches on every error return? */
+	ret = flush_all();
+	if (ret) return ret;
+	ret = write_superblock(&fs_info);	/* write superblock last */
+	return ret;
 }
 
 int my_rmdir (const char * path)
@@ -126,7 +174,7 @@ void my_mkfs ()
 	insert_inode(&fs_info, ROOT_DIR_INODE, INODE_DIR);
 
 	flush_all();
-	write_superblock(fs_info);	/* write superblock last */
+	write_superblock(&fs_info);	/* write superblock last */
 }
 
 /* vim: set ts=4 sw=4 tags=tags: */

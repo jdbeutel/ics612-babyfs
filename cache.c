@@ -253,22 +253,48 @@ PRIVATE int any_dirty() {
 	return FALSE;
 }
 
-PUBLIC int write_superblock(struct fs_info fs_info) {
+PUBLIC int write_superblock(struct fs_info *fs_info) {
 	struct cache *c;
 	struct superblock *sb;
 
 	init_caches();
 	assert(!any_dirty());	/* flush_all() is called before this function */
 	c = init_block(SUPERBLOCK_NR);	/* not shadowed, for my_mkfs() */
+	if (!c) {
+		return -errno;
+	}
 	sb = &c->u.superblock;
 	sb->super_magic = SUPER_MAGIC;
 	sb->version = BABYFS_VERSION;
-	sb->extent_tree_blocknr = fs_info.extent_root.blocknr;
-	sb->fs_tree_blocknr = fs_info.fs_root.blocknr;
-	sb->total_blocks = fs_info.total_blocks;
-	sb->lower_bounds = fs_info.lower_bounds;
+	sb->extent_tree_blocknr = fs_info->extent_root.blocknr;
+	sb->fs_tree_blocknr = fs_info->fs_root.blocknr;
+	sb->total_blocks = fs_info->total_blocks;
+	sb->lower_bounds = fs_info->lower_bounds;
 	put_block(c);
 	return flush_all();
+}
+
+PUBLIC int read_superblock(struct fs_info *fs_info) {
+	struct cache *c;
+	struct superblock *sb;
+
+	init_caches();
+	c = get_block(SUPERBLOCK_NR);
+	if (!c) {
+		return -errno;
+	}
+	sb = &c->u.superblock;
+	if (sb->super_magic != SUPER_MAGIC || sb->version != BABYFS_VERSION) {
+		return -EUCLEAN;
+	}
+	fs_info->extent_root.blocknr = sb->extent_tree_blocknr;
+	fs_info->extent_root.fs_info = fs_info;
+	fs_info->fs_root.blocknr = sb->fs_tree_blocknr;
+	fs_info->fs_root.fs_info = fs_info;
+	fs_info->total_blocks = sb->total_blocks;
+	fs_info->lower_bounds = sb->lower_bounds;
+	fs_info->alloc_block = normal_alloc_block;
+	return SUCCESS;
 }
 
 /* vim: set ts=4 sw=4 tags=tags: */

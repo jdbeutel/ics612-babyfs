@@ -10,6 +10,7 @@ CACHE_COUNT	cache.c	32;"	d	file:
 EXTRA_INSERT_KEYS	babyfs.h	98;"	d
 FAILURE	babyfs.h	124;"	d
 FALSE	babyfs.h	122;"	d
+FILE_SEPARATOR	babyfs.h	130;"	d
 HEADER_MAGIC	babyfs.h	33;"	d
 INDEX_TYPE	babyfs.h	30;"	d
 INODE_DIR	babyfs.h	76;"	d
@@ -84,6 +85,7 @@ filler2	babyfs.h	/^	uint16_t filler2;		\/* round up to 16 bytes for neat hex dum
 filler2	babyfs.h	/^	uint64_t filler2;	\/* lines up times in hex dump for comparison *\/$/;"	m	struct:inode_metadata
 find_cache_for	cache.c	/^PRIVATE struct cache *find_cache_for(blocknr_t n) {$/;"	f
 find_free_extent	extent.c	/^PRIVATE blocknr_t find_free_extent(struct root *ext_rt, blocknr_t nearby,$/;"	f
+find_free_inode	fs.c	/^PUBLIC uint32_t find_free_inode(struct fs_info *fsi) {$/;"	f
 fix_index_node	tree.c	/^PRIVATE int fix_index_node(struct root *r, struct path *p, int level) {$/;"	f
 flush_all	cache.c	/^PUBLIC int flush_all() {$/;"	f
 free_path	tree.c	/^PUBLIC void free_path(struct path *p) {$/;"	f
@@ -92,7 +94,8 @@ fs_info	babyfs.h	/^struct fs_info {$/;"	s
 fs_root	babyfs.h	/^	struct root fs_root;$/;"	m	struct:fs_info	typeref:struct:fs_info::root
 fs_tree_blocknr	babyfs.h	/^	blocknr_t fs_tree_blocknr;		\/* root *\/$/;"	m	struct:superblock
 get_block	cache.c	/^PUBLIC struct cache *get_block(blocknr_t blocknr) {$/;"	f
-get_inode_metadata	fs.c	/^PUBLIC struct inode_metadata *get_inode_metadata(uint32_t inode) {$/;"	f
+get_dir_ent_inode	fs.c	/^PUBLIC uint32_t get_dir_ent_inode(struct fs_info *fsi, uint32_t inode,$/;"	f
+get_inode_metadata	fs.c	/^PUBLIC int get_inode_metadata(struct fs_info *fsi, uint32_t inode,$/;"	f
 get_time	time.c	/^PUBLIC time_t get_time() {$/;"	f
 header	babyfs.h	/^	struct header header;$/;"	m	struct:node	typeref:struct:node::header
 header	babyfs.h	/^struct header {				\/* starts all nodes in a tree *\/$/;"	s
@@ -103,6 +106,7 @@ init_node	tree.c	/^PUBLIC struct cache *init_node( blocknr_t blocknr,$/;"	f
 inode	babyfs.h	/^	uint32_t inode;$/;"	m	struct:dir_ent_metadata
 inode_metadata	babyfs.h	/^struct inode_metadata {$/;"	s
 inode_type	babyfs.h	/^	uint32_t inode_type;$/;"	m	struct:inode_metadata
+insert_dir_ent	fs.c	/^PUBLIC int insert_dir_ent(struct fs_info *fsi, uint32_t dir_inode,$/;"	f
 insert_empty_item	tree.c	/^PUBLIC int insert_empty_item(struct root *r, struct key *key, struct path *p,$/;"	f
 insert_extent	extent.c	/^PUBLIC int insert_extent(struct root *ext_rt, uint32_t blocknr, uint16_t type,$/;"	f
 insert_inode	fs.c	/^PUBLIC int insert_inode(struct fs_info *fsi, uint32_t inode,$/;"	f
@@ -156,9 +160,11 @@ ptr_for	tree.c	/^PRIVATE blocknr_t ptr_for(struct cache *node, int slot) {$/;"	f
 put_block	cache.c	/^PUBLIC void put_block(struct cache *c) {$/;"	f
 read_block	block.c	/^int read_block (int block_num, char * block)$/;"	f
 read_blocknr	babyfs.h	/^	blocknr_t read_blocknr;			\/* if was_read, where from\/to *\/$/;"	m	struct:cache
+read_superblock	cache.c	/^PUBLIC int read_superblock(struct fs_info *fs_info) {$/;"	f
 remove_from_lru	cache.c	/^PRIVATE void remove_from_lru(struct cache *c) {$/;"	f
 root	babyfs.h	/^struct root {$/;"	s
 search_slot	tree.c	/^PUBLIC int search_slot(struct root *r, struct key *key, struct path *p,$/;"	f
+set_inode_key	fs.c	/^PRIVATE void set_inode_key(uint32_t inode, struct key *key) {$/;"	f
 set_time	time.c	/^PUBLIC void set_time(time_t t) {$/;"	f
 shadow_block_to	cache.c	/^PUBLIC void shadow_block_to(struct cache *c, blocknr_t write_blocknr) {	$/;"	f
 size	babyfs.h	/^	item_size_t size;		\/* of metadata, in bytes *\/$/;"	m	struct:item
@@ -186,4 +192,4 @@ was_read	babyfs.h	/^	unsigned int	was_read:1,		\/* was read from or written to d
 will_write	babyfs.h	/^					will_write:1;	\/* was allocated, needs flushing *\/$/;"	m	struct:cache
 write_block	block.c	/^int write_block (int block_num, char * block)$/;"	f
 write_blocknr	babyfs.h	/^	blocknr_t write_blocknr;		\/* if allocated for writing *\/$/;"	m	struct:cache
-write_superblock	cache.c	/^PUBLIC int write_superblock(struct fs_info fs_info) {$/;"	f
+write_superblock	cache.c	/^PUBLIC int write_superblock(struct fs_info *fs_info) {$/;"	f
