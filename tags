@@ -70,6 +70,7 @@ close_remove_file	testp6.c	/^static void close_remove_file (char * path, int fd)
 compare_keys	tree.c	/^PUBLIC int compare_keys(struct key *k1, struct key *k2) {$/;"	f
 contents	babyfs.h	/^		block contents;$/;"	m	union:cache::u2
 ctime	babyfs.h	/^	time_t ctime;		\/* 64 bits on my x86_64 *\/$/;"	m	struct:inode_metadata
+currently_allocating	extent.c	/^static blocknr_t currently_allocating = 0;$/;"	v	file:
 dev_open	block.c	/^int dev_open ()$/;"	f
 devsize	block.c	/^static int devsize = 0;$/;"	v	file:
 dir_ent_metadata	babyfs.h	/^struct dir_ent_metadata {$/;"	s
@@ -133,6 +134,7 @@ lower_bounds	babyfs.h	/^	uint8_t lower_bounds;			\/* b for balancing inner nodes
 lower_bounds	babyfs.h	/^	uint8_t lower_bounds;	\/* b for balancing inner nodes b..3b *\/$/;"	m	struct:fs_info
 lru	cache.c	/^static struct cache *lru;	\/* least-recently-used (free) list *\/$/;"	v	typeref:struct:cache	file:
 main	test1.c	/^int main (int argc, char ** argv) {$/;"	f
+main	test2.c	/^int main (int argc, char ** argv) {$/;"	f
 main	testp6.c	/^int main (int argc, char ** argv)$/;"	f
 metadata_for	tree.c	/^PUBLIC void *metadata_for(struct path *p) {$/;"	f
 metadata_size_for	tree.c	/^PRIVATE int metadata_size_for(struct path *p) {$/;"	f

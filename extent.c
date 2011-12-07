@@ -51,14 +51,21 @@ PUBLIC blocknr_t mkfs_alloc_block(struct root *ext_rt, blocknr_t nearby,
 	return nearby + 1;	/* just while making the extent tree */
 }
 
+static blocknr_t currently_allocating = 0;
+
 PUBLIC blocknr_t normal_alloc_block(struct root *ext_rt, blocknr_t nearby,
 									uint16_t type) {
 	uint32_t block_count = 1;
-	blocknr_t b;
+	blocknr_t b, previously_allocating;
 
-	printf("debug: normal_alloc_block near %d\n", nearby + 1);
+	printf("debug: normal_alloc_block near %d\n", nearby);
 	b = find_free_extent(ext_rt, nearby, block_count);
-	insert_extent(ext_rt, b, type, block_count);
+	if (currently_allocating != b) {	/* not recursing on extent tree */
+		previously_allocating = currently_allocating;
+		currently_allocating = b;
+		insert_extent(ext_rt, b, type, block_count);
+		currently_allocating = previously_allocating;
+	}
 	return b;
 }
 
