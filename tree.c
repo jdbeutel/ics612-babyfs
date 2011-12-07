@@ -38,6 +38,11 @@ PUBLIC struct key *key_for(struct cache *node, int slot) {
 	}
 }
 
+/* returns pointer to the key of the item at the end of the given path */
+PUBLIC struct key *item_key(struct path *p) {
+	return key_for(p->nodes[0], p->slots[0]);
+}
+
 PRIVATE blocknr_t ptr_for(struct cache *node, int slot) {
 	assert(slot < node->u.node.header.nritems);
 	assert(INDEX_TYPE(node->u.node.header.type));
@@ -61,7 +66,7 @@ PUBLIC void *metadata_for(struct path *p) {
 	return ((void *)leaf) + leaf->u.items[slot].offset;
 }
 
-PRIVATE int compare_keys(struct key *k1, struct key *k2) {
+PUBLIC int compare_keys(struct key *k1, struct key *k2) {
 	if (k1->objectid < k2->objectid) return -1;
 	if (k1->objectid > k2->objectid) return 1;
 	assert(k1->objectid == k2->objectid);
@@ -74,9 +79,23 @@ PRIVATE int compare_keys(struct key *k1, struct key *k2) {
 	return 0;
 }
 
+PRIVATE void free_path_from(struct path *p, int level) {
+	do {
+		put_block(p->nodes[level]);
+	} while(!is_root_level(level++, p));
+}
+
+/* puts the nodes on the path back to the cache.
+ * It's up to the owner of the path to call this.
+ */
+PUBLIC void free_path(struct path *p) {
+	free_path_from(p, 0);
+}
+
 /* advances the slot of the path to the next item
  * (walking the tree and freeing the path as necessary).
- * returns 0 for success, 1 if no next item (and frees path), or negative errno
+ * returns 0 for success,
+ * or on failure frees path and returns 1 if no next item or negative errno
  */
 PUBLIC int step_to_next_slot(struct path *p) {
 	struct cache *node;
@@ -93,6 +112,7 @@ PUBLIC int step_to_next_slot(struct path *p) {
 				b = ptr_for(node, slot);
 				node = get_block(b);
 				if (!node) {
+					free_path_from(p, level);
 					return -errno;
 				}
 				p->nodes[--level] = node;
@@ -100,14 +120,14 @@ PUBLIC int step_to_next_slot(struct path *p) {
 				hdr = &node->u.node.header; 
 				assert(slot < hdr->nritems);
 			}
-			return 0;	/* on the next slot */
+			return KEY_FOUND;	/* on the next slot */
 		}
 		assert(slot >= hdr->nritems);	/* node is out of slots, */
 		p->nodes[level] = NULL;		/* so take it off the path */
 		put_block(node);			/* and free it from the path */
 		p->slots[level] = 0;		/* this level will use the first slot */
 		if(is_root_level(level, p)) {	/* can't go any higher */
-			return 1;	/* there is no next item */
+			return KEY_NOT_FOUND;	/* there is no next item */
 		}
 		level++; 					/* look at next level up */
 	}
@@ -182,7 +202,6 @@ PRIVATE int insert_item_in_leaf(struct root *r, struct path *p,
 	int free;
 	int move_count = hdr->nritems - slot;
 	int ins_metadata = ins_len - sizeof(struct item);
-	int ret;
 
 	if (hdr->nritems) {
 		last_offset = leaf->u.node.u.items[hdr->nritems - 1].offset;
@@ -292,7 +311,7 @@ PRIVATE int ensure_leaf_space(struct root *r, struct path *p, int ins_len) {
  *	When deleting, index nodes (below root) at the lower bounds
  *	on the path are proactively fixed.  When 0, the nodes on the path
  *	are not modified or shadowed.
- * returns 0 if the key is found, 1 if not, or a negative errno.
+ * returns 0 if the key is found, 1 if not, or a negative errno with no path.
  */
 PUBLIC int search_slot(struct root *r, struct key *key, struct path *p,
 						int ins_len) {
@@ -305,7 +324,12 @@ PUBLIC int search_slot(struct root *r, struct key *key, struct path *p,
 		int i, j, least_key, comparison;
 		struct header *hdr;
 		struct cache *node = get_block(blocknr);
-		if (!node) return -errno;
+		if (!node) {
+			if (level != -1) {
+				free_path_from(p, level);
+			}
+			return -errno;
+		}
 		hdr = &node->u.node.header;
 		assert(hdr->header_magic == HEADER_MAGIC);
 		if (level >= 0) {
@@ -326,9 +350,15 @@ PUBLIC int search_slot(struct root *r, struct key *key, struct path *p,
 			p->slots[level] = 0;
 			/* init first leaf and add to path, but leave empty */
 			leafnr = alloc_block(r->fs_info, node, type);
-			if (!leafnr) return -ENOSPC;
+			if (!leafnr) {
+				free_path_from(p, level);
+				return -ENOSPC;
+			}
 			leaf = init_node(leafnr, type, 0);
-			if (!leaf) return -errno;
+			if (!leaf) {
+				free_path_from(p, level);
+				return -errno;
+			}
 			/* a new node gets a new ptr to it */
 			insert_key_ptr(r, p, level, key, leafnr);
 			p->nodes[0] = leaf;
@@ -358,14 +388,20 @@ PUBLIC int search_slot(struct root *r, struct key *key, struct path *p,
 		/* if going to modify, shadow now (on tree descent) */
 		if (ins_len) {
 			ret = ensure_will_write(r, p, level);
-			if (ret) return ret;
+			if (ret) {
+				free_path_from(p, level);
+				return ret;
+			}
 		}
 
 		/* leaf node */
 		if (level == 0) {
 			if (ins_len > 0) {
 				ret = ensure_leaf_space(r, p, ins_len);
-				if (ret) return ret;
+				if (ret) {
+					free_path(p);
+					return ret;
+				}
 			}
 			assert(hdr->nritems);	/* an empty leaf would not be preserved */
 			/* so there is an item to compare with */
@@ -383,14 +419,20 @@ PUBLIC int search_slot(struct root *r, struct key *key, struct path *p,
 				}
 				if (hdr->nritems >= UPPER_BOUNDS(r->fs_info->lower_bounds)) {
 					ret = split_index_node(r, p, level);
-					if (ret) return ret;
+					if (ret) {
+						free_path_from(p, level);
+						return ret;
+					}
 				}
 			}
 			if (ins_len < 0) {		/* deleting */
 				if (!is_root_level(level, p)
 				&& hdr->nritems <= r->fs_info->lower_bounds) {
 					ret = fix_index_node(r, p, level);
-					if (ret) return ret;
+					if (ret) {
+						free_path_from(p, level);
+						return ret;
+					}
 				}
 			}
 			blocknr = ptr_for(node, p->slots[level]);
@@ -408,22 +450,21 @@ PUBLIC int search_slot(struct root *r, struct key *key, struct path *p,
  */
 PUBLIC int insert_empty_item(struct root *r, struct key *key, struct path *p,
 						int ins_len) {
-	int level;
 	int ret;
 	ret = search_slot(r, key, p, ins_len);
-	if (ret == KEY_FOUND) return -EEXIST;
+	if (ret == KEY_FOUND) {
+		free_path(p);
+		return -EEXIST;
+	}
 	if (ret != KEY_NOT_FOUND) return ret;
 	return insert_item_in_leaf(r, p, key, ins_len);
 }
 
-/* puts the nodes on the path back to the cache.
- * It's up to the owner of the path to call this.
- */
-PUBLIC void free_path(struct path *p) {
-	int level = 0;
-	do {
-		put_block(p->nodes[level]);
-	} while(!is_root_level(level++, p));
+PUBLIC int insert_empty_item_allowing_duplicates(struct root *r,
+						struct key *key, struct path *p, int ins_len) {
+	int ret = search_slot(r, key, p, ins_len);
+	if (ret < 0) return ret;
+	return insert_item_in_leaf(r, p, key, ins_len);
 }
 
 /* vim: set ts=4 sw=4 tags=tags: */

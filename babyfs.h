@@ -87,7 +87,7 @@ struct inode_metadata {
 
 struct dir_ent_metadata {
 	uint32_t inode;
-	char name[1]; /* variable-sized, \0-terminated, up to 200 chars */
+	char name[1]; /* variable-sized, 1 char for \0-terminated, + 1..200 chars */
 };
 
 struct file_extent_metadata {
@@ -178,9 +178,13 @@ extern struct cache *init_node(blocknr_t blocknr, uint16_t type,
 				uint16_t level);
 extern void free_path(struct path *p);
 extern struct key *key_for(struct cache *node, int slot);
+extern struct key *item_key(struct path *p);
+extern int compare_keys(struct key *k1, struct key *k2);
 extern void *metadata_for(struct path *p);
 extern int insert_empty_item(struct root *r, struct key *key, struct path *p,
 							int ins_len);
+extern int insert_empty_item_allowing_duplicates(struct root *r,
+						struct key *key, struct path *p, int ins_len);
 extern int search_slot(struct root *r, struct key *key, struct path *p,
 						int ins_len);
 extern int step_to_next_slot(struct path *p);

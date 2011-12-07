@@ -67,7 +67,7 @@ cache	babyfs.h	/^struct cache {$/;"	s
 caches	cache.c	/^static struct cache caches[CACHE_COUNT];$/;"	v	typeref:struct:cache	file:
 caches_initialized	cache.c	/^static int caches_initialized = FALSE;$/;"	v	file:
 close_remove_file	testp6.c	/^static void close_remove_file (char * path, int fd)$/;"	f	file:
-compare_keys	tree.c	/^PRIVATE int compare_keys(struct key *k1, struct key *k2) {$/;"	f
+compare_keys	tree.c	/^PUBLIC int compare_keys(struct key *k1, struct key *k2) {$/;"	f
 contents	babyfs.h	/^		block contents;$/;"	m	union:cache::u2
 ctime	babyfs.h	/^	time_t ctime;		\/* 64 bits on my x86_64 *\/$/;"	m	struct:inode_metadata
 dev_open	block.c	/^int dev_open ()$/;"	f
@@ -89,14 +89,16 @@ find_free_inode	fs.c	/^PUBLIC uint32_t find_free_inode(struct fs_info *fsi) {$/;
 fix_index_node	tree.c	/^PRIVATE int fix_index_node(struct root *r, struct path *p, int level) {$/;"	f
 flush_all	cache.c	/^PUBLIC int flush_all() {$/;"	f
 free_path	tree.c	/^PUBLIC void free_path(struct path *p) {$/;"	f
+free_path_from	tree.c	/^PRIVATE void free_path_from(struct path *p, int level) {$/;"	f
 fs_info	babyfs.h	/^	struct fs_info *fs_info;$/;"	m	struct:root	typeref:struct:root::fs_info
 fs_info	babyfs.h	/^struct fs_info {$/;"	s
 fs_root	babyfs.h	/^	struct root fs_root;$/;"	m	struct:fs_info	typeref:struct:fs_info::root
 fs_tree_blocknr	babyfs.h	/^	blocknr_t fs_tree_blocknr;		\/* root *\/$/;"	m	struct:superblock
 get_block	cache.c	/^PUBLIC struct cache *get_block(blocknr_t blocknr) {$/;"	f
-get_dir_ent_inode	fs.c	/^PUBLIC uint32_t get_dir_ent_inode(struct fs_info *fsi, uint32_t inode,$/;"	f
+get_dir_ent_inode	fs.c	/^PUBLIC uint32_t get_dir_ent_inode(struct fs_info *fsi, uint32_t dir_inode,$/;"	f
 get_inode_metadata	fs.c	/^PUBLIC int get_inode_metadata(struct fs_info *fsi, uint32_t inode,$/;"	f
 get_time	time.c	/^PUBLIC time_t get_time() {$/;"	f
+hash	fs.c	/^PRIVATE uint32_t hash(char *name) {$/;"	f
 header	babyfs.h	/^	struct header header;$/;"	m	struct:node	typeref:struct:node::header
 header	babyfs.h	/^struct header {				\/* starts all nodes in a tree *\/$/;"	s
 header_magic	babyfs.h	/^	uint32_t header_magic;	\/* makes easy to spot in hex dumps *\/$/;"	m	struct:header
@@ -108,12 +110,14 @@ inode_metadata	babyfs.h	/^struct inode_metadata {$/;"	s
 inode_type	babyfs.h	/^	uint32_t inode_type;$/;"	m	struct:inode_metadata
 insert_dir_ent	fs.c	/^PUBLIC int insert_dir_ent(struct fs_info *fsi, uint32_t dir_inode,$/;"	f
 insert_empty_item	tree.c	/^PUBLIC int insert_empty_item(struct root *r, struct key *key, struct path *p,$/;"	f
+insert_empty_item_allowing_duplicates	tree.c	/^PUBLIC int insert_empty_item_allowing_duplicates(struct root *r,$/;"	f
 insert_extent	extent.c	/^PUBLIC int insert_extent(struct root *ext_rt, uint32_t blocknr, uint16_t type,$/;"	f
 insert_inode	fs.c	/^PUBLIC int insert_inode(struct fs_info *fsi, uint32_t inode,$/;"	f
 insert_item_in_leaf	tree.c	/^PRIVATE int insert_item_in_leaf(struct root *r, struct path *p,$/;"	f
 insert_key_ptr	tree.c	/^PRIVATE void insert_key_ptr(struct root *r, struct path *p, int level,$/;"	f
 is_root_level	tree.c	/^PRIVATE int is_root_level(int level, struct path *p) {$/;"	f
 item	babyfs.h	/^struct item {			\/* in leaf nodes *\/$/;"	s
+item_key	tree.c	/^PUBLIC struct key *item_key(struct path *p) {$/;"	f
 item_offset_t	babyfs.h	/^typedef uint16_t item_offset_t;	\/* need 10 bits for bytes within a block *\/$/;"	t
 item_size_t	babyfs.h	/^typedef uint16_t item_size_t;	\/* need 10 bits for bytes within a block *\/$/;"	t
 items	babyfs.h	/^		struct item	items[MAX_ITEMS];			\/* in leaf nodes *\/$/;"	m	union:node::u	typeref:struct:node::u::item
@@ -146,7 +150,7 @@ my_remove	p6.c	/^int my_remove (const char * path)$/;"	f
 my_rename	p6.c	/^int my_rename (const char * old, const char * new)$/;"	f
 my_rmdir	p6.c	/^int my_rmdir (const char * path)$/;"	f
 my_write	p6.c	/^int my_write (int fd, const void * buf, int count)$/;"	f
-name	babyfs.h	/^	char name[1]; \/* variable-sized, \\0-terminated, up to 200 chars *\/$/;"	m	struct:dir_ent_metadata
+name	babyfs.h	/^	char name[1]; \/* variable-sized, 1 char for \\0-terminated, + 1..200 chars *\/$/;"	m	struct:dir_ent_metadata
 node	babyfs.h	/^		struct node node;$/;"	m	union:cache::u2	typeref:struct:cache::u2::node
 node	babyfs.h	/^struct node {$/;"	s
 nodes	babyfs.h	/^	struct cache *nodes[MAX_LEVEL];$/;"	m	struct:path	typeref:struct:path::cache
@@ -164,6 +168,7 @@ read_superblock	cache.c	/^PUBLIC int read_superblock(struct fs_info *fs_info) {$
 remove_from_lru	cache.c	/^PRIVATE void remove_from_lru(struct cache *c) {$/;"	f
 root	babyfs.h	/^struct root {$/;"	s
 search_slot	tree.c	/^PUBLIC int search_slot(struct root *r, struct key *key, struct path *p,$/;"	f
+set_dir_ent_key	fs.c	/^PRIVATE void set_dir_ent_key(uint32_t dir_inode, char *name, struct key *key) {$/;"	f
 set_inode_key	fs.c	/^PRIVATE void set_inode_key(uint32_t inode, struct key *key) {$/;"	f
 set_time	time.c	/^PUBLIC void set_time(time_t t) {$/;"	f
 shadow_block_to	cache.c	/^PUBLIC void shadow_block_to(struct cache *c, blocknr_t write_blocknr) {	$/;"	f

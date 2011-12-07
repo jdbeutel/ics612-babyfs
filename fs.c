@@ -44,21 +44,72 @@ PUBLIC int get_inode_metadata(struct fs_info *fsi, uint32_t inode,
 	if (ret == KEY_FOUND) {
 		memmove(imd, metadata_for(&p), sizeof(*imd));
 	}
-	free_path(&p);
+	if (ret == KEY_FOUND || ret == KEY_NOT_FOUND) {
+		free_path(&p);
+	}
 	assert(KEY_FOUND == SUCCESS);
 	return ret;
+}
+
+PRIVATE uint32_t hash(char *name) {
+	uint32_t hash = 0;
+	int len = strlen(name);
+	int i;
+	for (i = 0; i < len; i++) {
+		hash = 31 * hash + name[i];
+	}
+	return hash;
+}
+
+PRIVATE void set_dir_ent_key(uint32_t dir_inode, char *name, struct key *key) {
+	key->objectid = dir_inode;
+	key->type = TYPE_DIR_ENT;
+	key->offset = hash(name);
 }
 
 /* gets the inode of a directory entry, or 0 if errno.
  * (inode 0 is the root dir, which is not an entry in any dir)
  */
-PUBLIC uint32_t get_dir_ent_inode(struct fs_info *fsi, uint32_t inode,
+PUBLIC uint32_t get_dir_ent_inode(struct fs_info *fsi, uint32_t dir_inode,
 									char *name) {
-	/* todo: hash name and walk collisions to find name */
+	struct path p;
+	struct key key;
+	struct dir_ent_metadata *demd;
+	int ret;
+
+	set_dir_ent_key(dir_inode, name, &key);
+	ret = search_slot(&fsi->fs_root, &key, &p, 0);
+	if (ret == KEY_NOT_FOUND) {
+		free_path(&p);	/* only for search_slot(), not step_to_next_slot() */
+	}
+	while (TRUE) {
+		if (ret == KEY_NOT_FOUND) {
+			errno = ENOENT;
+		}
+		if (ret < 0) {
+			errno = -ret;
+		}
+		if (ret != KEY_FOUND) {
+			return 0;	/* failure, with errno */
+		}
+		demd = (struct dir_ent_metadata *) metadata_for(&p);
+		if (!strcmp(name, demd->name)) {	/* name matches */
+			ret = demd->inode;
+			free_path(&p);
+			return ret;
+		}
+		ret = step_to_next_slot(&p);
+		if (ret == KEY_FOUND && compare_keys(&key, item_key(&p))) {
+			errno = ENOENT;
+			free_path(&p);
+			return 0;	/* failure, with errno */
+		}
+	}
 }
 
 /* gets the lowest free inode, or 0 if errno.
  * (inode 0 is the root dir, which is never free)
+ * not concerned with optimizations at this point in the project.
  */
 PUBLIC uint32_t find_free_inode(struct fs_info *fsi) {
 	struct key first;
@@ -81,9 +132,10 @@ PUBLIC uint32_t find_free_inode(struct fs_info *fsi) {
 			errno = -ret;
 			return 0;
 		}
-		if (ret > 0) {	/* no more items, and no path to free */
+		if (ret == KEY_NOT_FOUND) {	/* no more items, and no path to free */
 			return prev_inode + 1;
 		}
+		assert(ret == SUCCESS);
 		key = key_for(p.nodes[0], p.slots[0]);
 		if (key->objectid - prev_inode > 1) {
 			free_path(&p);
@@ -100,6 +152,23 @@ PUBLIC uint32_t find_free_inode(struct fs_info *fsi) {
  */
 PUBLIC int insert_dir_ent(struct fs_info *fsi, uint32_t dir_inode,
 								char *name, uint32_t ent_inode) {
+	struct path p;
+	struct key key;
+	struct dir_ent_metadata *demd;
+	int len = strlen(name), ret;
+
+	if (len > MAX_FILE_NAME_LENGTH) {
+		return -ENAMETOOLONG;
+	}
+	set_dir_ent_key(dir_inode, name, &key);
+	ret = insert_empty_item_allowing_duplicates(&fsi->fs_root, &key, &p,
+							sizeof(struct item) + sizeof(*demd) + len);
+	if (ret) return ret;
+	demd = (struct dir_ent_metadata *) metadata_for(&p);
+	demd->inode = ent_inode;
+	memmove(&demd->name, name, len);
+	free_path(&p);
+	return 0;	/* failure, with errno */
 }
 
 /* vim: set ts=4 sw=4 tags=tags: */
