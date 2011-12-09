@@ -4,39 +4,41 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.8	//
-BABYFS_VERSION	babyfs.h	103;"	d
+BABYFS_VERSION	babyfs.h	104;"	d
 BLOCKSIZE	p6.h	25;"	d
+BLOCK_RESERVES	extent.c	8;"	d	file:
 CACHE_COUNT	cache.c	32;"	d	file:
-EXTRA_INSERT_KEYS	babyfs.h	98;"	d
-FAILURE	babyfs.h	124;"	d
-FALSE	babyfs.h	122;"	d
-FILE_SEPARATOR	babyfs.h	130;"	d
-HEADER_MAGIC	babyfs.h	33;"	d
-INDEX_TYPE	babyfs.h	30;"	d
-INODE_DIR	babyfs.h	76;"	d
-INODE_FILE	babyfs.h	77;"	d
-INODE_KEY_OFFSET	babyfs.h	86;"	d
-KEY_FOUND	babyfs.h	125;"	d
-KEY_NOT_FOUND	babyfs.h	126;"	d
-LEAF_TYPE	babyfs.h	29;"	d
-LEAF_TYPE_FOR	babyfs.h	31;"	d
+EXTRA_INSERT_KEYS	babyfs.h	99;"	d
+EXT_TYPE	babyfs.h	29;"	d
+FAILURE	babyfs.h	125;"	d
+FALSE	babyfs.h	123;"	d
+FILE_SEPARATOR	babyfs.h	131;"	d
+HEADER_MAGIC	babyfs.h	34;"	d
+INDEX_TYPE	babyfs.h	31;"	d
+INODE_DIR	babyfs.h	77;"	d
+INODE_FILE	babyfs.h	78;"	d
+INODE_KEY_OFFSET	babyfs.h	87;"	d
+KEY_FOUND	babyfs.h	126;"	d
+KEY_NOT_FOUND	babyfs.h	127;"	d
+LEAF_TYPE	babyfs.h	30;"	d
+LEAF_TYPE_FOR	babyfs.h	32;"	d
 MAX_FILE_NAME_LENGTH	p6.h	6;"	d
-MAX_ITEMS	babyfs.h	67;"	d
-MAX_KEY_PTRS	babyfs.h	66;"	d
-MAX_LEVEL	babyfs.h	129;"	d
-MAX_LOWER_BOUNDS	babyfs.h	100;"	d
+MAX_ITEMS	babyfs.h	68;"	d
+MAX_KEY_PTRS	babyfs.h	67;"	d
+MAX_LEVEL	babyfs.h	130;"	d
+MAX_LOWER_BOUNDS	babyfs.h	101;"	d
 MAX_OPEN_FILES	p6.h	7;"	d
-MIN_LOWER_BOUNDS	babyfs.h	99;"	d
-NODE_PAYLOAD_BYTES	babyfs.h	65;"	d
-NULL	babyfs.h	120;"	d
+MIN_LOWER_BOUNDS	babyfs.h	100;"	d
+NODE_PAYLOAD_BYTES	babyfs.h	66;"	d
+NULL	babyfs.h	121;"	d
 P6_H	p6.h	4;"	d
-PRIVATE	babyfs.h	127;"	d
-PUBLIC	babyfs.h	128;"	d
-ROOT_DIR_INODE	babyfs.h	85;"	d
-SUCCESS	babyfs.h	123;"	d
-SUPERBLOCK_NR	babyfs.h	104;"	d
-SUPER_MAGIC	babyfs.h	102;"	d
-TRUE	babyfs.h	121;"	d
+PRIVATE	babyfs.h	128;"	d
+PUBLIC	babyfs.h	129;"	d
+ROOT_DIR_INODE	babyfs.h	86;"	d
+SUCCESS	babyfs.h	124;"	d
+SUPERBLOCK_NR	babyfs.h	105;"	d
+SUPER_MAGIC	babyfs.h	103;"	d
+TRUE	babyfs.h	122;"	d
 TYPE_DIR_ENT	babyfs.h	18;"	d
 TYPE_EXT_IDX	babyfs.h	23;"	d
 TYPE_EXT_LEAF	babyfs.h	24;"	d
@@ -46,12 +48,15 @@ TYPE_FS_IDX	babyfs.h	25;"	d
 TYPE_FS_LEAF	babyfs.h	26;"	d
 TYPE_INODE	babyfs.h	17;"	d
 TYPE_SUPERBLOCK	babyfs.h	22;"	d
-UPPER_BOUNDS	babyfs.h	101;"	d
+UPPER_BOUNDS	babyfs.h	102;"	d
 add_to_mru	cache.c	/^PRIVATE void add_to_mru(struct cache *c) {$/;"	f
 alloc_block	babyfs.h	/^	blocknr_t (*alloc_block)(struct root *extent_root, blocknr_t nearby,$/;"	m	struct:fs_info
 alloc_block	extent.c	/^PUBLIC blocknr_t alloc_block(struct fs_info *fs_info, struct cache *nearby,$/;"	f
 any_dirty	cache.c	/^PRIVATE int any_dirty() {$/;"	f
 block	p6.h	/^typedef char block [BLOCKSIZE];$/;"	t
+block_count	extent.c	/^	uint32_t block_count;$/;"	m	struct:block_reserve	file:
+block_reserve	extent.c	/^PRIVATE struct block_reserve {$/;"	s	file:
+block_reserves	extent.c	/^} block_reserves[BLOCK_RESERVES];$/;"	v	typeref:struct:block_reserve
 blocknr	babyfs.h	/^	blocknr_t blocknr;			\/* even after cache is put back *\/$/;"	m	struct:root
 blocknr	babyfs.h	/^	blocknr_t blocknr;		\/* for testing and simple consistency check *\/$/;"	m	struct:header
 blocknr	babyfs.h	/^	blocknr_t blocknr;$/;"	m	struct:file_extent_metadata
@@ -70,7 +75,6 @@ close_remove_file	testp6.c	/^static void close_remove_file (char * path, int fd)
 compare_keys	tree.c	/^PUBLIC int compare_keys(struct key *k1, struct key *k2) {$/;"	f
 contents	babyfs.h	/^		block contents;$/;"	m	union:cache::u2
 ctime	babyfs.h	/^	time_t ctime;		\/* 64 bits on my x86_64 *\/$/;"	m	struct:inode_metadata
-currently_allocating	extent.c	/^static blocknr_t currently_allocating = 0;$/;"	v	file:
 dev_open	block.c	/^int dev_open ()$/;"	f
 devsize	block.c	/^static int devsize = 0;$/;"	v	file:
 dir_ent_metadata	babyfs.h	/^struct dir_ent_metadata {$/;"	s
@@ -87,6 +91,8 @@ filler2	babyfs.h	/^	uint64_t filler2;	\/* lines up times in hex dump for compari
 find_cache_for	cache.c	/^PRIVATE struct cache *find_cache_for(blocknr_t n) {$/;"	f
 find_free_extent	extent.c	/^PRIVATE blocknr_t find_free_extent(struct root *ext_rt, blocknr_t nearby,$/;"	f
 find_free_inode	fs.c	/^PUBLIC uint32_t find_free_inode(struct fs_info *fsi) {$/;"	f
+find_reserve	extent.c	/^PRIVATE struct block_reserve *find_reserve(blocknr_t start_inclusive) {$/;"	f
+find_unreserved_blocks	extent.c	/^PRIVATE blocknr_t find_unreserved_blocks(uint32_t block_count,$/;"	f
 fix_index_node	tree.c	/^PRIVATE int fix_index_node(struct root *r, struct path *p, int level) {$/;"	f
 flush_all	cache.c	/^PUBLIC int flush_all() {$/;"	f
 free_path	tree.c	/^PUBLIC void free_path(struct path *p) {$/;"	f
@@ -113,6 +119,7 @@ insert_dir_ent	fs.c	/^PUBLIC int insert_dir_ent(struct fs_info *fsi, uint32_t di
 insert_empty_item	tree.c	/^PUBLIC int insert_empty_item(struct root *r, struct key *key, struct path *p,$/;"	f
 insert_empty_item_allowing_duplicates	tree.c	/^PUBLIC int insert_empty_item_allowing_duplicates(struct root *r,$/;"	f
 insert_extent	extent.c	/^PUBLIC int insert_extent(struct root *ext_rt, uint32_t blocknr, uint16_t type,$/;"	f
+insert_extents_for_reserves	extent.c	/^PUBLIC int insert_extents_for_reserves(struct root *ext_rt) {$/;"	f
 insert_inode	fs.c	/^PUBLIC int insert_inode(struct fs_info *fsi, uint32_t inode,$/;"	f
 insert_item_in_leaf	tree.c	/^PRIVATE int insert_item_in_leaf(struct root *r, struct path *p,$/;"	f
 insert_key_ptr	tree.c	/^PRIVATE void insert_key_ptr(struct root *r, struct path *p, int level,$/;"	f
@@ -152,6 +159,7 @@ my_remove	p6.c	/^int my_remove (const char * path)$/;"	f
 my_rename	p6.c	/^int my_rename (const char * old, const char * new)$/;"	f
 my_rmdir	p6.c	/^int my_rmdir (const char * path)$/;"	f
 my_write	p6.c	/^int my_write (int fd, const void * buf, int count)$/;"	f
+n_block_reserves	extent.c	/^PRIVATE int n_block_reserves = 0;$/;"	v
 name	babyfs.h	/^	char name[1]; \/* variable-sized, 1 char for \\0-terminated, + 1..200 chars *\/$/;"	m	struct:dir_ent_metadata
 node	babyfs.h	/^		struct node node;$/;"	m	union:cache::u2	typeref:struct:cache::u2::node
 node	babyfs.h	/^struct node {$/;"	s
@@ -162,11 +170,14 @@ objectid	babyfs.h	/^	uint32_t objectid;		\/* inode or blocknr *\/$/;"	m	struct:k
 offset	babyfs.h	/^	item_offset_t offset;	\/* of metadata, in bytes from start of block *\/$/;"	m	struct:item
 offset	babyfs.h	/^	uint32_t offset;$/;"	m	struct:key
 path	babyfs.h	/^struct path {$/;"	s
+pop_reserve	extent.c	/^PRIVATE struct block_reserve *pop_reserve() {$/;"	f
 ptr_for	tree.c	/^PRIVATE blocknr_t ptr_for(struct cache *node, int slot) {$/;"	f
+push_reserve	extent.c	/^PRIVATE int push_reserve(blocknr_t start, uint16_t type, uint32_t block_count) {$/;"	f
 put_block	cache.c	/^PUBLIC void put_block(struct cache *c) {$/;"	f
 read_block	block.c	/^int read_block (int block_num, char * block)$/;"	f
 read_blocknr	babyfs.h	/^	blocknr_t read_blocknr;			\/* if was_read, where from\/to *\/$/;"	m	struct:cache
 read_superblock	cache.c	/^PUBLIC int read_superblock(struct fs_info *fs_info) {$/;"	f
+recursion	extent.c	/^PRIVATE int recursion = 0;$/;"	v
 remove_from_lru	cache.c	/^PRIVATE void remove_from_lru(struct cache *c) {$/;"	f
 root	babyfs.h	/^struct root {$/;"	s
 search_slot	tree.c	/^PUBLIC int search_slot(struct root *r, struct key *key, struct path *p,$/;"	f
@@ -178,6 +189,7 @@ size	babyfs.h	/^	item_size_t size;		\/* of metadata, in bytes *\/$/;"	m	struct:i
 size	babyfs.h	/^	uint32_t size;	\/* in bytes *\/$/;"	m	struct:file_extent_metadata
 slots	babyfs.h	/^	int slots[MAX_LEVEL];$/;"	m	struct:path
 split_index_node	tree.c	/^PRIVATE int split_index_node(struct root *r, struct path *p, int level) {$/;"	f
+start	extent.c	/^	blocknr_t start;$/;"	m	struct:block_reserve	file:
 step_to_next_slot	tree.c	/^PUBLIC int step_to_next_slot(struct path *p) {$/;"	f
 super_magic	babyfs.h	/^	uint32_t super_magic;			\/* magic number protects from my_mkfs() *\/$/;"	m	struct:superblock
 superblock	babyfs.h	/^		struct superblock superblock;$/;"	m	union:cache::u2	typeref:struct:cache::u2::superblock
@@ -188,6 +200,7 @@ total_blocks	babyfs.h	/^	int total_blocks;				\/* device size *\/$/;"	m	struct:s
 total_blocks	babyfs.h	/^	int total_blocks;		\/* device size *\/$/;"	m	struct:fs_info
 type	babyfs.h	/^	uint16_t type;			\/* for testing, redundant with key.type *\/$/;"	m	struct:header
 type	babyfs.h	/^	uint32_t type;$/;"	m	struct:key
+type	extent.c	/^	uint16_t type;$/;"	m	struct:block_reserve	file:
 u	babyfs.h	/^	union u {$/;"	u	struct:node
 u	babyfs.h	/^	} u;$/;"	m	struct:cache	typeref:union:cache::u2
 u	babyfs.h	/^	} u;$/;"	m	struct:node	typeref:union:node::u

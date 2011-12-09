@@ -26,6 +26,7 @@ typedef uint16_t item_size_t;	/* need 10 bits for bytes within a block */
 #define TYPE_FS_LEAF		0xe4
 #define TYPE_FILE_DATA		0xe5
 
+#define EXT_TYPE(x)		((x) == TYPE_EXT_IDX || (x) == TYPE_EXT_LEAF)
 #define LEAF_TYPE(x)	((x) == TYPE_EXT_LEAF || (x) == TYPE_FS_LEAF)
 #define INDEX_TYPE(x)	((x) == TYPE_EXT_IDX || (x) == TYPE_FS_IDX)
 #define LEAF_TYPE_FOR(x)((x) == TYPE_EXT_IDX ? TYPE_EXT_LEAF : TYPE_FS_LEAF)
@@ -198,6 +199,7 @@ extern blocknr_t normal_alloc_block(struct root *extent_root, blocknr_t nearby,
 									uint16_t type);
 extern int insert_extent(struct root *extent_root, uint32_t blocknr,
 						uint16_t type, uint32_t block_count);
+extern int insert_extents_for_reserves(struct root *ext_rt);
 
 /* fs.c */
 extern int insert_inode(struct fs_info *fsi, uint32_t inode,

@@ -10,20 +10,29 @@ rm -f simulated_device test2.od-X test2.od-c
 dd if=/dev/zero of=simulated_device bs=1024 count=99
 99+0 records in
 99+0 records out
-101376 bytes (101 kB) copied, 0.00073724 s, 138 MB/s
+101376 bytes (101 kB) copied, 0.000791015 s, 128 MB/s
 ./test2 2>&1 | tee test2.out
 test2: tree.c:336: search_slot: Assertion `level == hdr->level + 1' failed.
 debug: init_node 1 e1 1
 debug: mkfs_alloc_block 2
 debug: init_node 2 e2 0
-debug: normal_alloc_block near 1
+debug: normal_alloc_block near 1 (recursion level 0)
+debug: normal_alloc_block got 3 (for type e3)
 debug: init_node 3 e3 1
-debug: normal_alloc_block near 3
+debug: normal_alloc_block near 3 (recursion level 0)
+debug: normal_alloc_block got 4 (for type e4)
 debug: init_node 4 e4 0
-debug: normal_alloc_block near 3
-debug: normal_alloc_block near 1
-debug: normal_alloc_block near 2
-debug: normal_alloc_block near 4
+debug: normal_alloc_block near 3 (recursion level 0)
+debug: normal_alloc_block got 5 (for type e3)
+debug: normal_alloc_block near 1 (recursion level 1)
+debug: normal_alloc_block got 5 (for type e1)
+debug: reserving block 5 type e1
+debug: normal_alloc_block near 2 (recursion level 1)
+debug: inserting extent for reserve block 5 (0 remaining)
+debug: normal_alloc_block near 2 (recursion level 1)
+debug: normal_alloc_block got 5 (for type e2)
+debug: reserving block 5 type e2
+debug: inserting extent for reserve block 5 (0 remaining)
 od -Ax -c simulated_device > test2.od-c
 od -Ax -X simulated_device > test2.od-X
 git diff test2.od-X

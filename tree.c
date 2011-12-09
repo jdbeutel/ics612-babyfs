@@ -409,7 +409,8 @@ PUBLIC int search_slot(struct root *r, struct key *key, struct path *p,
 			if (comparison < 0) {
 				p->slots[0]++;	/* would insert at next slot in leaf */
 			}
-			return comparison ? KEY_NOT_FOUND : KEY_FOUND;
+			ret = insert_extents_for_reserves(&r->fs_info->extent_root);
+			return ret ? ret : (comparison ? KEY_NOT_FOUND : KEY_FOUND);
 
 		/* index node */
 		} else {
